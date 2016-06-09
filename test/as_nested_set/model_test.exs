@@ -3,15 +3,23 @@ defmodule AsNestedSetTest.ModelTest do
   doctest AsNestedSet.Model
   defmodule Sample do
     use AsNestedSet.Model
-    defstruct lft: "left", rgt: "right", parent_id: "parent_id"
+    defstruct id: "id", lft: "left", rgt: "right", parent_id: "parent_id"
   end
 
   defmodule Redefined do
     use AsNestedSet.Model
+    @node_id_column :node_id
     @parent_id_column :pid
     @left_column :left
     @right_column :right
-    defstruct left: "left", right: "right", pid: "parent_id"
+    defstruct node_id: "node_id", left: "left", right: "right", pid: "parent_id"
+  end
+
+  test "should define node_id/1 method" do
+    sample = %Sample{}
+    assert Sample.node_id(sample) == sample.id
+    redefined = %Redefined{}
+    assert Redefined.node_id(redefined) == redefined.node_id
   end
 
   test "should define left/1 method" do

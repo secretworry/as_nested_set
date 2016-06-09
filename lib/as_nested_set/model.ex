@@ -2,6 +2,7 @@ defmodule AsNestedSet.Model do
 
   defmacro __using__(_) do
     quote do
+      @node_id_column :id
       @left_column :lft
       @right_column :rgt
       @parent_id_column :parent_id
@@ -11,9 +12,9 @@ defmodule AsNestedSet.Model do
 
   defmacro __before_compile__(env) do
     nil
-    |> define_accessors([:left, :right, :parent_id], env)
+    |> define_accessors([:node_id, :left, :right, :parent_id], env)
     |> define_queriers(env)
-    |> define_column_name_accessors([:left_column, :right_column, :parent_id_column], env)
+    |> define_column_name_accessors([:node_id_column, :left_column, :right_column, :parent_id_column], env)
   end
 
   defp define_accessors(acc, names, env) do
@@ -24,6 +25,9 @@ defmodule AsNestedSet.Model do
         unquote(acc)
         def unquote(name)(model) do
           model.unquote(column_name)
+        end
+        def unquote(name)(model, value) do
+          Map.put(model, unquote(column_name), value)
         end
       end
     end)

@@ -13,6 +13,28 @@ defmodule AsNestedSet.Scoped do
       def same_scope?(source, target) do
         AsNestedSet.Scoped.do_same_scope?(source, target, unquote(scope))
       end
+
+      @spec scoped_query(Ecto.Query.t, any) :: Ecto.Query.t
+      def scoped_query(query, target) do
+        Enum.reduce(@scope, query, fn(acc, scope) ->
+          from p in acc,
+            where: field(^scope, p) == ^target.scope
+        end)
+      end
+
+      @spec assign_scope(any, any) :: any
+      def assign_scope_from(target, source) do
+        Enum.reduce(@scope, target, fn(acc, scope) ->
+          Map.put(acc, scope, Map.fetch!(source, scope))
+        end)
+      end
+
+      @spec scope(any) :: Map.t
+      def scope(target) do
+        Enum.reduce(@scope, %{}, fn(acc, scope) ->
+          Map.put(acc, scope, Map.fetch!(target, scope))
+        end)
+      end
     end
   end
 
