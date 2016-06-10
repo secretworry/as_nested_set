@@ -111,6 +111,21 @@ defmodule AsNestedSet.ModifiableTest do
     )
   end
 
+  test "create/3 should not affect other tree" do
+    create_tree(1)
+    create_tree(2)
+    Taxon.create(%Taxon{name: "root", taxonomy_id: 1}, :root)
+    assert match(Taxon.dump(%{taxonomy_id: 2}),
+      {%{name: "n0", lft: 0, rgt: 9, taxonomy_id: 2}, [
+        {%{ name: "n00", lft: 1, rgt: 2, taxonomy_id: 2}, []},
+        {%{ name: "n01", lft: 3, rgt: 8, taxonomy_id: 2}, [
+          {%{ name: "n010", lft: 4, rgt: 5, taxonomy_id: 2}, []},
+          {%{ name: "n011", lft: 6, rgt: 7, taxonomy_id: 2}, []}
+        ]}
+      ]}
+    )
+  end
+
   test "delete/1 should delete a node and all its descendants" do
     {_, [_,{target, _}]} = create_tree(1)
     Taxon.delete(target)
