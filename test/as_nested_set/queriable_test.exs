@@ -67,11 +67,11 @@ defmodule AsNestedSet.QueriableTest do
     assert Taxon.descendants(no_child) == []
   end
 
-  test "root/1 return nil for emtpy tree" do
+  test "root/1 returns nil for emtpy tree" do
     assert Taxon.root(%{taxonomy_id: 1}) == nil
   end
 
-  test "root/1 return the root of the tree" do
+  test "root/1 returns the root of the tree" do
     create_tree(1)
     assert match(Taxon.root(%{taxonomy_id: 1}),
       %{name: "n0", lft: 0, rgt: 9, taxonomy_id: 1}
