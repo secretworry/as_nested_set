@@ -129,4 +129,14 @@ defmodule AsNestedSetTest do
       ]}
     )
   end
+
+  test "delete/1 should delete a node and all its descendants" do
+    {_, [_,{target, _}]} = create_tree(1)
+    Taxon.delete(target)
+    assert match(Taxon.dump(%{taxonomy_id: 1}),
+      {%{name: "n0", lft: 0, rgt: 3, taxonomy_id: 1}, [
+        {%{ name: "n00", lft: 1, rgt: 2, taxonomy_id: 1}, []}
+      ]}
+    )
+  end
 end

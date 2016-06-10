@@ -6,10 +6,41 @@ defmodule AsNestedSet.Modifiable do
 
   defmacro __using__(args) do
     quote do
+
       def create(target \\ nil, new_model, position) when is_atom(position) do
         AsNestedSet.Modifiable.do_create(__MODULE__, target, new_model, position)
       end
+
+      def delete(model) do
+        AsNestedSet.Modifiable.do_delete(__MODULE__, model)
+      end
     end
+  end
+
+  @spec do_delete(Module.t, any) :: boolean
+  def do_delete(module, model) do
+    left = module.left(model)
+    right = module.right(model)
+    width = right - left + 1
+    from(q in module,
+      where: field(q, ^module.left_column) >= ^left and field(q, ^module.left_column) <= ^right
+    )
+    |> module.scoped_query(model)
+    |> module.repo.delete_all([])
+
+    from(q in module,
+      where: field(q, ^module.right_column) > ^right,
+      update: [inc: ^[{module.right_column, -width}]]
+    )
+    |> module.scoped_query(model)
+    |> module.repo.update_all([])
+
+    from(q in module,
+      where: field(q, ^module.left_column) > ^right,
+      update: [inc: ^[{module.left_column, -width}]]
+    )
+    |> module.scoped_query(model)
+    |> module.repo.update_all([])
   end
 
   @spec do_create(Module.t, any, any, position) :: :ok | {:err, any}
