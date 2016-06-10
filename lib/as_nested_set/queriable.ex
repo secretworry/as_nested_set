@@ -4,6 +4,10 @@ defmodule AsNestedSet.Queriable do
 
   defmacro __using__(args) do
     quote do
+      def root(scope) do
+        AsNestedSet.Queriable.do_root(__MODULE__, scope)
+      end
+
       def right_most(scope) do
         AsNestedSet.Queriable.do_right_most(__MODULE__, scope)
       end
@@ -20,7 +24,45 @@ defmodule AsNestedSet.Queriable do
       def children(target) do
         AsNestedSet.Queriable.do_children(__MODULE__, target)
       end
+
+      def leaves(scope) do
+        AsNestedSet.Queriable.leaves(__MODULE__, scope)
+      end
+
+      def descendants(target) do
+        AsNestedSet.Queriable.do_descendants(__MODULE__, target)
+      end
     end
+  end
+
+  def do_root(module, scope) do
+    from(q in module,
+      where: is_nil(field(q, ^module.parent_id_column))
+    )
+    |> module.scoped_query(scope)
+    |> module.repo.one
+  end
+
+  def do_descendants(module, target) do
+    left = module.left(target)
+    right = module.right(target)
+    from(q in module,
+      where: field(q, ^module.left_column) > ^left and field(q, ^module.right_column) < ^right,
+      order_by: ^[module.left_column]
+    )
+    |> module.scoped_query(target)
+    |> module.repo.all
+  end
+
+  def do_leaves(module, scope) do
+    """
+    from(q in module,
+      where: field(q, ^module.left_column) == field(q, ^module.right_column) + 1,
+      order_by: ^[module.left_column]
+    )
+    |> module.scoped_query(scope)
+    |> module.repo.all
+    """
   end
 
   def do_children(module, target) do
