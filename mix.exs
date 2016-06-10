@@ -18,7 +18,7 @@ defmodule AsNestedSet.Mixfile do
     [applications: app_list(Mix.env)]
   end
 
-  def app_list(:test), do: app_list ++ [:ecto, :postgrex]
+  def app_list(:test), do: app_list ++ [:ecto, :postgrex, :ex_machina]
   def app_list(_), do: app_list
   def app_list, do: [:logger]
 
@@ -34,7 +34,8 @@ defmodule AsNestedSet.Mixfile do
   defp deps do
     [
       {:ecto, "~> 2.0.0-beta", only: [:dev, :test]},
-      {:postgrex, ">= 0.0.0", only: [:test]}
+      {:postgrex, ">= 0.0.0", only: [:test]},
+      {:ex_machina, "~> 1.0.0-beta.1", github: "thoughtbot/ex_machina", only: [:test]}
     ]
   end
 

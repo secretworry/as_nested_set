@@ -4,8 +4,10 @@ defmodule AsNestedSet do
     repo = Keyword.fetch!(args, :repo)
     quote do
       use AsNestedSet.Model
-      use AsNestedSet.Modifiable, repo: unquote(repo)
+      use AsNestedSet.Repo, repo: unquote(repo)
       use AsNestedSet.Scoped, scope: unquote(scope)
+      use AsNestedSet.Queriable
+      use AsNestedSet.Modifiable
     end
   end
 end

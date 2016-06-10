@@ -1,4 +1,7 @@
 defmodule AsNestedSet.Scoped do
+
+  import Ecto.Query
+
   defmacro __using__(args) do
     quote do
       @scope unquote(Keyword.get(args, :scope, []))
@@ -16,15 +19,12 @@ defmodule AsNestedSet.Scoped do
 
       @spec scoped_query(Ecto.Query.t, any) :: Ecto.Query.t
       def scoped_query(query, target) do
-        Enum.reduce(@scope, query, fn(acc, scope) ->
-          from p in acc,
-            where: field(^scope, p) == ^target.scope
-        end)
+        AsNestedSet.Scoped.do_scoped_query(__MODULE__, @scope, query, target)
       end
 
-      @spec assign_scope(any, any) :: any
+      @spec assign_scope_from(any, any) :: any
       def assign_scope_from(target, source) do
-        Enum.reduce(@scope, target, fn(acc, scope) ->
+        Enum.reduce(@scope, target, fn(scope, acc) ->
           Map.put(acc, scope, Map.fetch!(source, scope))
         end)
       end
@@ -36,6 +36,14 @@ defmodule AsNestedSet.Scoped do
         end)
       end
     end
+  end
+
+  @spec do_scoped_query(Module.t, [atom], Ecto.Query.t, any) :: Ecto.Query.t
+  def do_scoped_query(module, scopes, query, target) do
+    Enum.reduce(scopes, query, fn(scope, acc) ->
+      from(p in acc,
+        where: field(p, ^scope) == ^Map.fetch!(target, scope))
+    end)
   end
 
   @spec do_same_scope?(any, any, atom) :: boolean

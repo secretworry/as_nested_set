@@ -5,108 +5,129 @@ defmodule AsNestedSet.Modifiable do
   import Ecto.Query
 
   defmacro __using__(args) do
-    repo = Keyword.fetch!(args, :repo)
     quote do
-
-      @repo unquote(repo)
-
-      def create(target, new_model, position) when is_atom(position) do
-        AsNestedSet.do_create(__MODULE__, @repo, target, new_model, position)
-      end
-
-      def right_most(scope) when is_list(scope) do
-        from q in __MODULE__,
-          select: max(field(q, ^right_column))
-        |> scoped_query
-        |> @repo.one!
+      def create(target \\ nil, new_model, position) when is_atom(position) do
+        AsNestedSet.Modifiable.do_create(__MODULE__, target, new_model, position)
       end
     end
   end
 
-  @spec do_create(atom, Module.t, any, any, position) :: :ok | {:err, any}
-  def do_create(module, repo, target, new_model, position) do
-    case validate_create(module, target, new_model) do
-      :ok -> do_safe_create(module, repo, target, new_model, position)
+  @spec do_create(atom, any, any, position) :: :ok | {:err, any}
+  def do_create(module, target, new_model, position) do
+    case validate_create(module, target, new_model, position) do
+      :ok -> do_safe_create(module, target, new_model, position)
       error -> error
     end
   end
 
-  defp do_safe_create(module, repo, target, new_model, :left) do
+  defp do_safe_create(module, target, new_model, :left) do
     left = module.left(target)
     left_column = module.left_column
     right_column = module.right_column
+    # update all the left and right column
     from(q in module,
       where: field(q, ^module.left_column) >= ^left,
       update: [inc: ^[{left_column, 2}, {right_column, 2}]]
     )
     |> module.scoped_query(target)
-    |> repo.update_all([])
+    |> module.repo.update_all([])
 
-    new_model
-    |> module.left(left)
-    |> module.right(left + 1)
-    |> module.parent_id(module.parent_id(target))
-    |> repo.insert!
-  end
-
-  defp do_safe_create(module, repo, target, new_model, :right) do
-    right = module.right(target)
-    left_column = module.left_column
-    right_column = module.right_column
     from(q in module,
-      where: field(q, ^module.left_column) > ^right,
-      update: [inc: ^[{left_column, 2}, {right_column, 2}]]
+      where: field(q, ^module.right_column) >= ^left and field(q, ^module.left_column) < ^left,
+      update: [inc: ^[{right_column, 2}]]
     )
     |> module.scoped_query(target)
-    |> repo.update_all([])
+    |> module.repo.update_all([])
 
+    # insert the new model
     new_model
-    |> module.left(right + 1)
-    |> module.right(right + 2)
-    |> module.parent_id(module.parent_id(target))
-    |> repo.insert!
+    |> module.changeset(Map.new([
+        {module.left_column, left},
+        {module.right_column, left + 1},
+        {module.parent_id_column, module.parent_id(target)}
+      ]))
+    |> module.repo.insert!
   end
 
-  defp do_safe_create(module, repo, target, new_model, :child) do
+  defp do_safe_create(module, target, new_model, :right) do
+    right = module.right(target)
+    # update all the left and right column
+    from(q in module,
+      where: field(q, ^module.left_column) > ^right,
+      update: [inc: ^[{module.left_column, 2}, {module.right_column, 2}]]
+    )
+    |> module.scoped_query(target)
+    |> module.repo.update_all([])
+
+    from(q in module,
+      where: field(q, ^module.right_column) > ^right and field(q, ^module.left_column) < ^right,
+      update: [inc: ^[{module.right_column, 2}]]
+    )
+    |> module.scoped_query(target)
+    |> module.repo.update_all([])
+
+    # insert new model
+    new_model
+    |> module.changeset(Map.new([
+        {module.left_column, right + 1},
+        {module.right_column, right + 2},
+        {module.parent_id_column, module.parent_id(target)}
+      ]))
+    |> module.repo.insert!
+  end
+
+  defp do_safe_create(module, target, new_model, :child) do
     right = module.right(target)
     from(q in module,
       where: field(q, ^module.left_column) > ^right,
       update: [inc: ^[{module.left_column, 2}, {module.right_column, 2}]]
     )
     |> module.scoped_query(target)
-    |> repo.update_all([])
+    |> module.repo.update_all([])
 
-    target
-    |> module.right(right + 2)
-    |> repo.update
+    from(q in module,
+      where: field(q, ^module.right_column) >= ^right and field(q, ^module.left_column) < ^right,
+      update: [inc: ^[{module.right_column, 2}]]
+    )
+    |> module.scoped_query(target)
+    |> module.repo.update_all([])
 
     new_model
-    |> module.left(right)
-    |> module.right(right + 1)
-    |> repo.insert!
+    |> module.changeset(Map.new([
+        {module.left_column, right},
+        {module.right_column, right + 1},
+        {module.parent_id_column, module.node_id(target)}
+      ]))
+    |> module.repo.insert!
   end
 
-  defp do_safe_create(module, repo, target, new_model, :root) do
-    right_most = module.right_most(target)
+  defp do_safe_create(module, target, new_model, :root) do
+    right_most = module.right_most(new_model) || -1
     from( q in module,
       update: [inc: ^[{module.left_column, 1}, {module.right_column, 1}]]
     )
-    |> module.scoped_query(target)
-    |> repo.update_all([])
+    |> module.scoped_query(new_model)
+    |> module.repo.update_all([])
 
     new_model = new_model
     |> module.left(0)
     |> module.right(right_most + 2)
-    |> repo.insert!
+    |> module.repo.insert!
 
-    target
-    |> module.parent_id(Map.fetch(new_model, module.parent_id_column))
-    |> repo.update
+    from( q in module,
+      where: is_nil(field(q, ^module.parent_id_column)) and field(q, ^module.left_column) == 1,
+      update: [set: ^[{module.parent_id_column, module.node_id(new_model)}]]
+    )
+    |> module.scoped_query(new_model)
+    |> module.repo.update_all([])
+
+    new_model
   end
 
-  defp validate_create(module, parent, new_model) do
+  defp validate_create(module, parent, new_model, position) do
     cond do
-      !module.same_scope?(parent, new_model) -> {:err, :not_the_same_scope}
+      parent == nil && position != :root -> {:err, :target_is_required}
+      position != :root && !module.same_scope?(parent, new_model) -> {:err, :not_the_same_scope}
       true -> :ok
     end
   end
