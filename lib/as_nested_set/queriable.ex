@@ -13,7 +13,8 @@ defmodule AsNestedSet.Queriable do
       end
 
       def dump(scope) do
-        AsNestedSet.Queriable.do_dump(__MODULE__, scope)
+        [root] = AsNestedSet.Queriable.do_dump(__MODULE__, scope)
+        root
       end
     end
   end

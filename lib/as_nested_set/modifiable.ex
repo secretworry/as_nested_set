@@ -12,7 +12,7 @@ defmodule AsNestedSet.Modifiable do
     end
   end
 
-  @spec do_create(atom, any, any, position) :: :ok | {:err, any}
+  @spec do_create(Module.t, any, any, position) :: :ok | {:err, any}
   def do_create(module, target, new_model, position) do
     case validate_create(module, target, new_model, position) do
       :ok -> do_safe_create(module, target, new_model, position)
@@ -22,19 +22,17 @@ defmodule AsNestedSet.Modifiable do
 
   defp do_safe_create(module, target, new_model, :left) do
     left = module.left(target)
-    left_column = module.left_column
-    right_column = module.right_column
     # update all the left and right column
     from(q in module,
       where: field(q, ^module.left_column) >= ^left,
-      update: [inc: ^[{left_column, 2}, {right_column, 2}]]
+      update: [inc: ^[{module.left_column, 2}]]
     )
     |> module.scoped_query(target)
     |> module.repo.update_all([])
 
     from(q in module,
-      where: field(q, ^module.right_column) >= ^left and field(q, ^module.left_column) < ^left,
-      update: [inc: ^[{right_column, 2}]]
+      where: field(q, ^module.right_column) > ^left,
+      update: [inc: ^[{module.right_column, 2}]]
     )
     |> module.scoped_query(target)
     |> module.repo.update_all([])
@@ -54,13 +52,13 @@ defmodule AsNestedSet.Modifiable do
     # update all the left and right column
     from(q in module,
       where: field(q, ^module.left_column) > ^right,
-      update: [inc: ^[{module.left_column, 2}, {module.right_column, 2}]]
+      update: [inc: ^[{module.left_column, 2}]]
     )
     |> module.scoped_query(target)
     |> module.repo.update_all([])
 
     from(q in module,
-      where: field(q, ^module.right_column) > ^right and field(q, ^module.left_column) < ^right,
+      where: field(q, ^module.right_column) > ^right,
       update: [inc: ^[{module.right_column, 2}]]
     )
     |> module.scoped_query(target)
@@ -80,13 +78,13 @@ defmodule AsNestedSet.Modifiable do
     right = module.right(target)
     from(q in module,
       where: field(q, ^module.left_column) > ^right,
-      update: [inc: ^[{module.left_column, 2}, {module.right_column, 2}]]
+      update: [inc: ^[{module.left_column, 2}]]
     )
     |> module.scoped_query(target)
     |> module.repo.update_all([])
 
     from(q in module,
-      where: field(q, ^module.right_column) >= ^right and field(q, ^module.left_column) < ^right,
+      where: field(q, ^module.right_column) >= ^right,
       update: [inc: ^[{module.right_column, 2}]]
     )
     |> module.scoped_query(target)
