@@ -16,7 +16,20 @@ defmodule AsNestedSet.Queriable do
         [root] = AsNestedSet.Queriable.do_dump(__MODULE__, scope)
         root
       end
+
+      def children(target) do
+        AsNestedSet.Queriable.do_children(__MODULE__, target)
+      end
     end
+  end
+
+  def do_children(module, target) do
+    from(q in module,
+      where: field(q, ^module.parent_id_column) == ^module.node_id(target),
+      order_by: ^[module.left_column]
+    )
+    |> module.scoped_query(target)
+    |> module.repo.all
   end
 
   def do_dump(module, scope, parent_id \\ nil) do
