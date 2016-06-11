@@ -76,4 +76,13 @@ defmodule AsNestedSet.QueriableTest do
       %{name: "n0", lft: 0, rgt: 9, taxonomy_id: 1}
     )
   end
+
+  test "self_and_descendants/1 should returns self and all descendants" do
+    {_, [_, {target, _}|_]} = create_tree(1)
+    assert match(Taxon.self_and_descendants(target), [
+      %{name: "n01", lft: 3, rgt: 8, taxonomy_id: 1},
+      %{name: "n010", lft: 4, rgt: 5, taxonomy_id: 1},
+      %{name: "n011", lft: 6, rgt: 7, taxonomy_id: 1}
+    ])
+  end
 end

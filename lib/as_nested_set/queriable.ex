@@ -32,7 +32,22 @@ defmodule AsNestedSet.Queriable do
       def descendants(target) do
         AsNestedSet.Queriable.do_descendants(__MODULE__, target)
       end
+
+      def self_and_descendants(target) do
+        AsNestedSet.Queriable.do_self_and_descendants(__MODULE__, target)
+      end
     end
+  end
+
+  def do_self_and_descendants(module, target) do
+    left = module.left(target)
+    right = module.right(target)
+    from(q in module,
+      where: field(q, ^module.left_column) >= ^left and field(q, ^module.right_column) <= ^right,
+      order_by: ^[module.left_column]
+    )
+    |> module.scoped_query(target)
+    |> module.repo.all
   end
 
   def do_root(module, scope) do
