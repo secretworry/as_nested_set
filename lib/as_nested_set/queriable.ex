@@ -40,7 +40,20 @@ defmodule AsNestedSet.Queriable do
       def ancestors(target) do
         AsNestedSet.Queriable.do_ancestors(__MODULE__, target)
       end
+
+      def self_and_siblings(target) do
+        AsNestedSet.Queriable.do_self_and_siblings(__MODULE__, target)
+      end
     end
+  end
+
+  def do_self_and_siblings(module, target) do
+    from(q in module,
+      where: field(q, ^module.parent_id_column) == ^module.parent_id(target),
+      order_by: ^[module.left_column]
+    )
+    |> module.scoped_query(target)
+    |> module.repo.all
   end
 
   def do_ancestors(module, target) do
