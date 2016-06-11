@@ -8,12 +8,12 @@ Add as_nested_set to your list of dependencies in `mix.exs`:
 
       # use the stable version
       def deps do
-        [{:as_nested_set, "~> 0.1"}]
+        [{:as_nested_set, "~> 0.1", app: false}]
       end
 
       # use the latest version
       def deps do
-        [{:as_nested_set, github: "https://github.com/secretworry/as_nested_set.git"}]
+        [{:as_nested_set, github: "https://github.com/secretworry/as_nested_set.git", app: false}]
       end
 
 ## Usage
