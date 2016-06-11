@@ -26,7 +26,7 @@ defmodule AsNestedSet.Queriable do
       end
 
       def leaves(scope) do
-        AsNestedSet.Queriable.leaves(__MODULE__, scope)
+        AsNestedSet.Queriable.do_leaves(__MODULE__, scope)
       end
 
       def descendants(target) do
@@ -55,14 +55,12 @@ defmodule AsNestedSet.Queriable do
   end
 
   def do_leaves(module, scope) do
-    """
     from(q in module,
-      where: field(q, ^module.left_column) == field(q, ^module.right_column) + 1,
+      where: fragment("? - ?", field(q, ^module.right_column), field(q, ^module.left_column)) == 1,
       order_by: ^[module.left_column]
     )
     |> module.scoped_query(scope)
     |> module.repo.all
-    """
   end
 
   def do_children(module, target) do

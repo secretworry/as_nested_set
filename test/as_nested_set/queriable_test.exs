@@ -42,7 +42,6 @@ defmodule AsNestedSet.QueriableTest do
     assert match(Taxon.children(no_child), [])
   end
 
-  @tag skip: "cannot get a = b + 1 works in ecto"
   test "leaves/1 should return all leaves" do
     create_tree(1)
     assert match(Taxon.leaves(%{taxonomy_id: 1}), [
