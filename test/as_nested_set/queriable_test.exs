@@ -85,4 +85,12 @@ defmodule AsNestedSet.QueriableTest do
       %{name: "n011", lft: 6, rgt: 7, taxonomy_id: 1}
     ])
   end
+
+  test "ancestors/1 should return all its ancestors" do
+    {_, [_, {_, [{target, []}|_]}|_]} = create_tree(1)
+    assert match(Taxon.ancestors(target), [
+      %{name: "n0", lft: 0, rgt: 9, taxonomy_id: 1},
+      %{name: "n01", lft: 3, rgt: 8, taxonomy_id: 1}
+    ])
+  end
 end
