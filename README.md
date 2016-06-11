@@ -6,6 +6,12 @@
 
 Add as_nested_set to your list of dependencies in `mix.exs`:
 
+      # use the stable version
+      def deps do
+        [{:as_nested_set, "~> 0.0.1"}]
+      end
+
+      # use the latest version
       def deps do
         [{:as_nested_set, github: "https://github.com/secretworry/as_nested_set.git"}]
       end
