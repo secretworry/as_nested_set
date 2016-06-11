@@ -6,9 +6,27 @@ defmodule AsNestedSet.Mixfile do
      version: "0.0.1",
      elixir: "~> 1.2",
      elixirc_paths: elixirc_paths(Mix.env),
+     description: description,
+     package: package,
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps]
+  end
+
+  defp description do
+    """
+    An ecto based Nested set model implementation
+    """
+  end
+
+  defp package do
+    [
+      name: :as_nested_set,
+      files: ["lib", "priv", "mix.exs", "README*", "LICENSE*"],
+      maintainers: ["dusiyh@gmail.com"],
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/secretworry/as_nested_set"}
+    ]
   end
 
   # Configuration for the OTP application
@@ -33,7 +51,7 @@ defmodule AsNestedSet.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:ecto, "~> 2.0.0-beta", only: [:dev, :test]},
+      {:ecto, "~> 2.0.0-beta"},
       {:postgrex, ">= 0.0.0", only: [:test]},
       {:ex_machina, "~> 1.0.0-beta.1", github: "thoughtbot/ex_machina", only: [:test]}
     ]
