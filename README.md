@@ -8,7 +8,7 @@ Add as_nested_set to your list of dependencies in `mix.exs`:
 
       # use the stable version
       def deps do
-        [{:as_nested_set, "~> 0.0.1"}]
+        [{:as_nested_set, "~> 0.1"}]
       end
 
       # use the latest version
@@ -103,4 +103,27 @@ Remove a specified node and all its descendants
 ```elixir
 target = Repo.find!(Taxon, 1)
 Taxon.remove(target)
+```
+
+Query different nodes
+
+```elixir
+
+# find all children of target
+Taxon.children(target)
+
+# find all the leaves for given scope
+Taxon.leaves(%{taxonomy_id: 1})
+
+# find all descendants
+Taxon.descendants(target)
+# include self
+Taxon.self_and_descendants(target)
+
+# find all ancestors
+Taxon.ancestors(target)
+
+#find all siblings (self included)
+Taxon.self_and_siblings(target)
+
 ```
