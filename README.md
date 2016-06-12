@@ -62,10 +62,10 @@ defmodule AsNestedSet.Taxon do
 end
 ```
 
-  * `@right_column`: column name for right boundary(default to `lft`, since left is a reserved keyword for Mysql)
-  * `@left_column`: column name for left boundary(default to `rgt`, reserved too)
-  * `@node_id_column`:  specifies the name for the node id column(default to `id`, i.e. the id of the model, change this if you want to has a different id, or you id field is different)
-  * `@parent_id_column`: specifies the name for the parent id column(default to `parent_id`)
+  * `@right_column`: column name for right boundary (default to `lft`, since left is a reserved keyword for Mysql)
+  * `@left_column`: column name for left boundary (default to `rgt`, reserved too)
+  * `@node_id_column`:  specifies the name for the node id column (default to `id`, i.e. the id of the model, change this if you want to have a different id, or you id field is different)
+  * `@parent_id_column`: specifies the name for the parent id column (default to `parent_id`)
 
 You can also pass following to modify its behavior:
 
