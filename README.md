@@ -8,7 +8,7 @@ Add as_nested_set to your list of dependencies in `mix.exs`:
 
       # use the stable version
       def deps do
-        [{:as_nested_set, "~> 0.1", app: false}]
+        [{:as_nested_set, "~> 1.0", app: false}]
       end
 
       # use the latest version
@@ -93,6 +93,8 @@ Taxon.create(target, %Taxon{name: "left", taxonomy_id: 1}, :left)
 Taxon.create(target, %Taxon{name: "right", taxonomy_id: 1}, :right)
 # add as first child
 Taxon.create(target, %Taxon{name: "child", taxonomy_id: 1}, :child)
+# add as parent
+Taxon.create(target, %Taxon{name: "parent", taxonomy_id: 1}, :parent)
 
 # add as root
 Taxon.create(%Taxon{name: "root", taxonomy_id: 1}, :root)
@@ -108,6 +110,9 @@ Taxon.remove(target)
 Query different nodes
 
 ```elixir
+
+# find all roots
+Taxon.roots(%{taxonomy_id: 1})
 
 # find all children of target
 Taxon.children(target)
