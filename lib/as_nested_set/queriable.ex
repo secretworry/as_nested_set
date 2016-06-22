@@ -8,6 +8,10 @@ defmodule AsNestedSet.Queriable do
         AsNestedSet.Queriable.do_root(__MODULE__, scope)
       end
 
+      def roots(scope) do
+        AsNestedSet.Queriable.do_roots(__MODULE__, scope)
+      end
+
       def right_most(scope) do
         AsNestedSet.Queriable.do_right_most(__MODULE__, scope)
       end
@@ -17,8 +21,12 @@ defmodule AsNestedSet.Queriable do
       end
 
       def dump(scope) do
-        [root] = AsNestedSet.Queriable.do_dump(__MODULE__, scope)
-        root
+        AsNestedSet.Queriable.do_dump(__MODULE__, scope)
+      end
+
+      def dump_one(scope) do
+        [dump|_] = AsNestedSet.Queriable.do_dump(__MODULE__, scope)
+        dump
       end
 
       def children(target) do
@@ -80,10 +88,20 @@ defmodule AsNestedSet.Queriable do
 
   def do_root(module, scope) do
     from(q in module,
-      where: is_nil(field(q, ^module.parent_id_column))
+      where: is_nil(field(q, ^module.parent_id_column)),
+      limit: 1
     )
     |> module.scoped_query(scope)
     |> module.repo.one
+  end
+
+  def do_roots(module, scope) do
+    from(q in module,
+      where: is_nil(field(q, ^module.parent_id_column)),
+      order_by: ^[module.left_column]
+    )
+    |> module.scoped_query(scope)
+    |> module.repo.all
   end
 
   def do_descendants(module, target) do

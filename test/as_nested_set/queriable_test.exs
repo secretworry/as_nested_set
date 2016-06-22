@@ -28,6 +28,15 @@ defmodule AsNestedSet.QueriableTest do
     ]}
   end
 
+  def create_forest(taxonomy_id) do
+    n0 = insert(:taxon, name: "n0", lft: 0, rgt: 1, taxonomy_id: taxonomy_id)
+    n1 = insert(:taxon, name: "n1", lft: 2, rgt: 3, taxonomy_id: taxonomy_id)
+    [
+      {n0, []},
+      {n1, []}
+    ]
+  end
+
   test "right_most/1 works find" do
     create_tree(1)
     assert Taxon.right_most(%{taxonomy_id: 1}) == 9
@@ -77,6 +86,14 @@ defmodule AsNestedSet.QueriableTest do
     )
   end
 
+  test "roots/1 returns the roots of the forest" do
+    create_forest(1)
+    assert match(Taxon.roots(%{taxonomy_id: 1}), [
+      %{name: "n0", lft: 0, rgt: 1, taxonomy_id: 1},
+      %{name: "n1", lft: 2, rgt: 3, taxonomy_id: 1}
+    ])
+  end
+
   test "self_and_descendants/1 should returns self and all descendants" do
     {_, [_, {target, _}|_]} = create_tree(1)
     assert match(Taxon.self_and_descendants(target), [
@@ -101,4 +118,5 @@ defmodule AsNestedSet.QueriableTest do
       %{name: "n01", lft: 3, rgt: 8, taxonomy_id: 1}
     ])
   end
+
 end

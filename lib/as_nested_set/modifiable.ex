@@ -1,6 +1,6 @@
 defmodule AsNestedSet.Modifiable do
 
-  @type position :: :left | :right | :child
+  @type position :: :left | :right | :child | :parent
 
   import Ecto.Query
 
@@ -132,22 +132,53 @@ defmodule AsNestedSet.Modifiable do
 
   defp do_safe_create(module, target, new_model, :root) do
     right_most = module.right_most(new_model) || -1
-    from( q in module,
-      update: [inc: ^[{module.left_column, 1}, {module.right_column, 1}]]
+
+    new_model = new_model
+    |> module.left(right_most + 1)
+    |> module.right(right_most + 2)
+    |> module.parent_id(nil)
+    |> module.repo.insert!
+
+    new_model
+  end
+
+  defp do_safe_create(module, target, new_model, :parent) do
+    right = module.right(target)
+    left = module.left(target)
+    from(q in module,
+      where: field(q, ^module.right_column) > ^right,
+      update: [inc: ^[{module.right_column, 2}]]
     )
-    |> module.scoped_query(new_model)
+    |> module.scoped_query(target)
+    |> module.repo.update_all([])
+
+    from(q in module,
+      where: field(q, ^module.left_column) > ^right,
+      update: [inc: ^[{module.left_column, 2}]]
+    )
+    |> module.scoped_query(target)
+    |> module.repo.update_all([])
+
+    from(q in module,
+      where: field(q, ^module.left_column) >= ^left and field(q, ^module.right_column) <= ^right,
+      update: [inc: ^[{module.right_column, 1}, {module.left_column, 1}]]
+    )
+    |> module.scoped_query(target)
     |> module.repo.update_all([])
 
     new_model = new_model
-    |> module.left(0)
-    |> module.right(right_most + 2)
+    |> module.left(left)
+    |> module.right(right + 2)
+    |> module.parent_id(module.parent_id(target))
     |> module.repo.insert!
 
-    from( q in module,
-      where: is_nil(field(q, ^module.parent_id_column)) and field(q, ^module.left_column) == 1,
-      update: [set: ^[{module.parent_id_column, module.node_id(new_model)}]]
+    node_id = module.node_id(target)
+
+    from(q in module,
+      where: field(q, ^module.node_id_column) == ^node_id,
+      update: [set: ^[{module.parent_id_column, new_model.id}]]
     )
-    |> module.scoped_query(new_model)
+    |> module.scoped_query(target)
     |> module.repo.update_all([])
 
     new_model
