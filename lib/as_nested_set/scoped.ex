@@ -39,7 +39,7 @@ defmodule AsNestedSet.Scoped do
   end
 
   @spec do_scoped_query(Module.t, [atom], Ecto.Query.t, any) :: Ecto.Query.t
-  def do_scoped_query(module, scopes, query, target) do
+  def do_scoped_query(_module, scopes, query, target) do
     Enum.reduce(scopes, query, fn(scope, acc) ->
       from(p in acc,
         where: field(p, ^scope) == ^Map.fetch!(target, scope))

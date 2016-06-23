@@ -2,7 +2,7 @@ defmodule AsNestedSet.Queriable do
 
   import Ecto.Query
 
-  defmacro __using__(args) do
+  defmacro __using__(_args) do
     quote do
       def root(scope) do
         AsNestedSet.Queriable.do_root(__MODULE__, scope)

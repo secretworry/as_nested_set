@@ -33,7 +33,7 @@ defmodule AsNestedSet.Model do
     end)
   end
 
-  defp define_queriers(acc, env) do
+  defp define_queriers(acc, _env) do
     quote do
       unquote(acc)
       def child?(model) do

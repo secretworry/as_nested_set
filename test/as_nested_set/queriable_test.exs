@@ -43,7 +43,7 @@ defmodule AsNestedSet.QueriableTest do
   end
 
   test "children/1 should get all children in the right sequence" do
-    {root, [{no_child, []}, {with_child, _}]} = create_tree(1)
+    {root, [{no_child, []}, _]} = create_tree(1)
     assert match(Taxon.children(root),[
       %{name: "n00", lft: 1, rgt: 2, taxonomy_id: 1},
       %{name: "n01", lft: 3, rgt: 8, taxonomy_id: 1},

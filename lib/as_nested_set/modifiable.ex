@@ -4,7 +4,7 @@ defmodule AsNestedSet.Modifiable do
 
   import Ecto.Query
 
-  defmacro __using__(args) do
+  defmacro __using__(_args) do
     quote do
 
       def create(new_model, target \\ nil, position) when is_atom(position) do
