@@ -3,7 +3,7 @@ defmodule AsNestedSet.Mixfile do
 
   def project do
     [app: :as_nested_set,
-     version: "1.0.0",
+     version: "1.0.1",
      elixir: "~> 1.2",
      elixirc_paths: elixirc_paths(Mix.env),
      description: description,
@@ -39,7 +39,7 @@ defmodule AsNestedSet.Mixfile do
 
   defp deps do
     [
-      {:ecto, "~> 2.0.0-beta"},
+      {:ecto, "~> 2.0.0"},
       {:postgrex, ">= 0.0.0", only: [:test]},
       {:ex_machina, "~> 1.0.0-beta.1", github: "thoughtbot/ex_machina", only: [:test]}
     ]
