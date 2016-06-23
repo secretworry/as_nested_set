@@ -7,8 +7,8 @@ defmodule AsNestedSet.Modifiable do
   defmacro __using__(args) do
     quote do
 
-      def create(target \\ nil, new_model, position) when is_atom(position) do
-        AsNestedSet.Modifiable.do_create(__MODULE__, target, new_model, position)
+      def create(new_model, target \\ nil, position) when is_atom(position) do
+        AsNestedSet.Modifiable.do_create(__MODULE__, new_model, target, position)
       end
 
       def delete(model) do
@@ -44,14 +44,14 @@ defmodule AsNestedSet.Modifiable do
   end
 
   @spec do_create(Module.t, any, any, position) :: :ok | {:err, any}
-  def do_create(module, target, new_model, position) do
-    case validate_create(module, target, new_model, position) do
-      :ok -> do_safe_create(module, target, new_model, position)
+  def do_create(module, new_model, target, position) do
+    case validate_create(module, new_model, target, position) do
+      :ok -> do_safe_create(module, new_model, target, position)
       error -> error
     end
   end
 
-  defp do_safe_create(module, target, new_model, :left) do
+  defp do_safe_create(module, new_model, target, :left) do
     left = module.left(target)
     # update all the left and right column
     from(q in module,
@@ -78,7 +78,7 @@ defmodule AsNestedSet.Modifiable do
     |> module.repo.insert!
   end
 
-  defp do_safe_create(module, target, new_model, :right) do
+  defp do_safe_create(module, new_model, target, :right) do
     right = module.right(target)
     # update all the left and right column
     from(q in module,
@@ -105,7 +105,7 @@ defmodule AsNestedSet.Modifiable do
     |> module.repo.insert!
   end
 
-  defp do_safe_create(module, target, new_model, :child) do
+  defp do_safe_create(module, new_model, target, :child) do
     right = module.right(target)
     from(q in module,
       where: field(q, ^module.left_column) > ^right,
@@ -130,7 +130,7 @@ defmodule AsNestedSet.Modifiable do
     |> module.repo.insert!
   end
 
-  defp do_safe_create(module, target, new_model, :root) do
+  defp do_safe_create(module, new_model, _target, :root) do
     right_most = module.right_most(new_model) || -1
 
     new_model = new_model
@@ -142,7 +142,7 @@ defmodule AsNestedSet.Modifiable do
     new_model
   end
 
-  defp do_safe_create(module, target, new_model, :parent) do
+  defp do_safe_create(module, new_model, target, :parent) do
     right = module.right(target)
     left = module.left(target)
     from(q in module,
@@ -184,7 +184,7 @@ defmodule AsNestedSet.Modifiable do
     new_model
   end
 
-  defp validate_create(module, parent, new_model, position) do
+  defp validate_create(module, new_model, parent, position) do
     cond do
       parent == nil && position != :root -> {:err, :target_is_required}
       position != :root && !module.same_scope?(parent, new_model) -> {:err, :not_the_same_scope}

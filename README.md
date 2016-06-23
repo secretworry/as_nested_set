@@ -88,16 +88,16 @@ Add a new node
 ```elixir
 target = Repo.find!(Taxon, 1)
 # add to left
-Taxon.create(target, %Taxon{name: "left", taxonomy_id: 1}, :left)
+%Taxon{name: "left", taxonomy_id: 1} |> Taxon.create(target, :left)
 # add to right
-Taxon.create(target, %Taxon{name: "right", taxonomy_id: 1}, :right)
+%Taxon{name: "right", taxonomy_id: 1} |> Taxon.create(target, :right)
 # add as first child
-Taxon.create(target, %Taxon{name: "child", taxonomy_id: 1}, :child)
+%Taxon{name: "child", taxonomy_id: 1} |> Taxon.create(target, :child)
 # add as parent
-Taxon.create(target, %Taxon{name: "parent", taxonomy_id: 1}, :parent)
+%Taxon{name: "parent", taxonomy_id: 1} |> Taxon.create(target, :parent)
 
 # add as root
-Taxon.create(%Taxon{name: "root", taxonomy_id: 1}, :root)
+%Taxon{name: "root", taxonomy_id: 1} |> Taxon.create(:root)
 ```
 
 Remove a specified node and all its descendants
