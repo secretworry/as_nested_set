@@ -150,4 +150,16 @@ defmodule AsNestedSet.ModifiableTest do
       ]}
     )
   end
+
+  test "create/3 should create consecutive children" do
+    root = %Taxon{name: "root", taxonomy_id: 1} |> Taxon.create(:root)
+    %Taxon{name: "child0", taxonomy_id: 1} |> Taxon.create(root, :child)
+    %Taxon{name: "child1", taxonomy_id: 1} |> Taxon.create(root, :child)
+    assert match(Taxon.dump_one(%{taxonomy_id: 1}),
+      {%{name: "root", lft: 0, rgt: 5, taxonomy_id: 1}, [
+        {%{name: "child0", lft: 1, rgt: 2, taxonomy_id: 1}, []},
+        {%{name: "child1", lft: 3, rgt: 4, taxonomy_id: 1}, []}
+      ]}
+    )
+  end
 end

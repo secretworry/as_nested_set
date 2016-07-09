@@ -46,7 +46,7 @@ defmodule AsNestedSet.Modifiable do
   @spec do_create(Module.t, any, any, position) :: :ok | {:err, any}
   def do_create(module, new_model, target, position) do
     case validate_create(module, new_model, target, position) do
-      :ok -> do_safe_create(module, new_model, target, position)
+      :ok -> do_safe_create(module, new_model, reload(module, target), position)
       error -> error
     end
   end
@@ -191,4 +191,19 @@ defmodule AsNestedSet.Modifiable do
       true -> :ok
     end
   end
+
+  defp reload(module, target) when not is_nil(target) do
+    node_id = module.node_id(target)
+    from(q in module,
+      where: field(q, ^module.node_id_column) == ^node_id,
+      limit: 1
+    )
+    |> module.scoped_query(target)
+    |> module.repo.one
+  end
+
+  defp reload(module, target) do
+    target
+  end
+
 end
