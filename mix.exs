@@ -3,7 +3,7 @@ defmodule AsNestedSet.Mixfile do
 
   def project do
     [app: :as_nested_set,
-     version: "1.0.1",
+     version: "1.0.2",
      elixir: "~> 1.2",
      elixirc_paths: elixirc_paths(Mix.env),
      description: description,
