@@ -25,8 +25,10 @@ defmodule AsNestedSet.Queriable do
       end
 
       def dump_one(scope) do
-        [dump|_] = AsNestedSet.Queriable.do_dump(__MODULE__, scope)
-        dump
+        fn repo ->
+          [dump|_] = AsNestedSet.Queriable.do_dump(__MODULE__, scope).(repo)
+          dump
+        end
       end
 
       def children(target) do
@@ -56,116 +58,137 @@ defmodule AsNestedSet.Queriable do
   end
 
   def do_self_and_siblings(module, target) do
-    from(q in module,
-      where: field(q, ^module.parent_id_column) == ^module.parent_id(target),
-      order_by: ^[module.left_column]
-    )
-    |> module.scoped_query(target)
-    |> module.repo.all
+    fn repo ->
+      from(q in module,
+        where: field(q, ^module.parent_id_column) == ^module.parent_id(target),
+        order_by: ^[module.left_column]
+      )
+      |> module.scoped_query(target)
+      |> repo.all
+    end
   end
 
   def do_ancestors(module, target) do
-    left = module.left(target)
-    right = module.right(target)
-    from(q in module,
-      where: field(q, ^module.left_column) < ^left and field(q, ^module.right_column) > ^right,
-      order_by: ^[module.left_column]
-    )
-    |> module.scoped_query(target)
-    |> module.repo.all
+    fn repo ->
+      left = module.left(target)
+      right = module.right(target)
+      from(q in module,
+        where: field(q, ^module.left_column) < ^left and field(q, ^module.right_column) > ^right,
+        order_by: ^[module.left_column]
+      )
+      |> module.scoped_query(target)
+      |> repo.all
+    end
   end
 
   def do_self_and_descendants(module, target) do
-    left = module.left(target)
-    right = module.right(target)
-    from(q in module,
-      where: field(q, ^module.left_column) >= ^left and field(q, ^module.right_column) <= ^right,
-      order_by: ^[module.left_column]
-    )
-    |> module.scoped_query(target)
-    |> module.repo.all
+    fn repo ->
+      left = module.left(target)
+      right = module.right(target)
+      from(q in module,
+        where: field(q, ^module.left_column) >= ^left and field(q, ^module.right_column) <= ^right,
+        order_by: ^[module.left_column]
+      )
+      |> module.scoped_query(target)
+      |> repo.all
+    end
   end
 
   def do_root(module, scope) do
-    from(q in module,
-      where: is_nil(field(q, ^module.parent_id_column)),
-      limit: 1
-    )
-    |> module.scoped_query(scope)
-    |> module.repo.one
+    fn repo ->
+      from(q in module,
+        where: is_nil(field(q, ^module.parent_id_column)),
+        limit: 1
+      )
+      |> module.scoped_query(scope)
+      |> repo.one
+    end
   end
 
   def do_roots(module, scope) do
-    from(q in module,
-      where: is_nil(field(q, ^module.parent_id_column)),
-      order_by: ^[module.left_column]
-    )
-    |> module.scoped_query(scope)
-    |> module.repo.all
-  end
-
-  def do_descendants(module, target) do
-    left = module.left(target)
-    right = module.right(target)
-    from(q in module,
-      where: field(q, ^module.left_column) > ^left and field(q, ^module.right_column) < ^right,
-      order_by: ^[module.left_column]
-    )
-    |> module.scoped_query(target)
-    |> module.repo.all
-  end
-
-  def do_leaves(module, scope) do
-    from(q in module,
-      where: fragment("? - ?", field(q, ^module.right_column), field(q, ^module.left_column)) == 1,
-      order_by: ^[module.left_column]
-    )
-    |> module.scoped_query(scope)
-    |> module.repo.all
-  end
-
-  def do_children(module, target) do
-    from(q in module,
-      where: field(q, ^module.parent_id_column) == ^module.node_id(target),
-      order_by: ^[module.left_column]
-    )
-    |> module.scoped_query(target)
-    |> module.repo.all
-  end
-
-  def do_dump(module, scope, parent_id \\ nil) do
-    children = if parent_id do
-      from(q in module,
-        where: field(q, ^module.parent_id_column) == ^parent_id,
-        order_by: ^[module.left_column]
-      )
-    else
+    fn repo ->
       from(q in module,
         where: is_nil(field(q, ^module.parent_id_column)),
         order_by: ^[module.left_column]
       )
+      |> module.scoped_query(scope)
+      |> repo.all
     end
-    |> module.scoped_query(scope)
-    |> module.repo.all
-    Enum.map(children, fn(child) ->
-      {child, do_dump(module, scope, module.node_id(child))}
-    end)
+  end
+
+  def do_descendants(module, target) do
+    fn repo ->
+      left = module.left(target)
+      right = module.right(target)
+      from(q in module,
+        where: field(q, ^module.left_column) > ^left and field(q, ^module.right_column) < ^right,
+        order_by: ^[module.left_column]
+      )
+      |> module.scoped_query(target)
+      |> repo.all
+    end
+  end
+
+  def do_leaves(module, scope) do
+    fn repo ->
+      from(q in module,
+        where: fragment("? - ?", field(q, ^module.right_column), field(q, ^module.left_column)) == 1,
+        order_by: ^[module.left_column]
+      )
+      |> module.scoped_query(scope)
+      |> repo.all
+    end
+  end
+
+  def do_children(module, target) do
+    fn repo ->
+      from(q in module,
+        where: field(q, ^module.parent_id_column) == ^module.node_id(target),
+        order_by: ^[module.left_column]
+      )
+      |> module.scoped_query(target)
+      |> repo.all
+    end
+  end
+
+  def do_dump(module, scope, parent_id \\ nil) do
+    fn repo ->
+      children = if parent_id do
+        from(q in module,
+          where: field(q, ^module.parent_id_column) == ^parent_id,
+          order_by: ^[module.left_column]
+        )
+      else
+        from(q in module,
+          where: is_nil(field(q, ^module.parent_id_column)),
+          order_by: ^[module.left_column]
+        )
+      end
+      |> module.scoped_query(scope)
+      |> repo.all
+      Enum.map(children, fn(child) ->
+        {child, do_dump(module, scope, module.node_id(child)).(repo)}
+      end)
+    end
   end
 
   def do_reload(module, target) do
-    from(q in module,
-      where: field(q, ^module.node_id_column) == ^module.node_id(target)
-    )
-    |> module.scoped_query(target)
-    |> module.repo.one!
+    fn repo ->
+      from(q in module,
+        where: field(q, ^module.node_id_column) == ^module.node_id(target)
+      )
+      |> module.scoped_query(target)
+      |> repo.one!
+    end
   end
 
   def do_right_most(module, scope) do
-    from(q in module,
-      select: max(field(q, ^module.right_column))
-    )
-    |> module.scoped_query(scope)
-    |> module.repo.one!
+    fn repo ->
+      from(q in module,
+        select: max(field(q, ^module.right_column))
+      )
+      |> module.scoped_query(scope)
+      |> repo.one!
+    end
   end
-
 end

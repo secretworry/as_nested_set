@@ -8,7 +8,7 @@ Add as_nested_set to your list of dependencies in `mix.exs`:
 
       # use the stable version
       def deps do
-        [{:as_nested_set, "~> 1.0", app: false}]
+        [{:as_nested_set, "~> 2.0", app: false}]
       end
 
       # use the latest version
@@ -43,7 +43,7 @@ Enable the nested set functionality by `use AsNestedSet` on your model
 
 ```elixir
 defmodule AsNestedSet.Taxon do
-  use AsNestedSet, repo: AsNestedSet.TestRepo, scope: [:taxonomy_id]
+  use AsNestedSet, scope: [:taxonomy_id]
   # ...
 end
 ```
@@ -71,13 +71,12 @@ You can also pass following to modify its behavior:
 
 ```elixir
 defmodule AsNestedSet.Taxon do
-  use AsNestedSet, repo: AsNestedSet.TestRepo, scope: [:taxonomy_id]
+  use AsNestedSet, scope: [:taxonomy_id]
   # ...
 end
 ```
 
   * `scope`: (required) a list of column names which restrict what is to be considered within the same tree(same scope).
-  * `repo`: (required) the name of the repo to operate on
 
 ## Model Operations
 
@@ -88,23 +87,23 @@ Add a new node
 ```elixir
 target = Repo.find!(Taxon, 1)
 # add to left
-%Taxon{name: "left", taxonomy_id: 1} |> Taxon.create(target, :left)
+%Taxon{name: "left", taxonomy_id: 1} |> Taxon.create(target, :left) |> Taxon.execute(TestRepo)
 # add to right
-%Taxon{name: "right", taxonomy_id: 1} |> Taxon.create(target, :right)
+%Taxon{name: "right", taxonomy_id: 1} |> Taxon.create(target, :right) |> Taxon.execute(TestRepo)
 # add as first child
-%Taxon{name: "child", taxonomy_id: 1} |> Taxon.create(target, :child)
+%Taxon{name: "child", taxonomy_id: 1} |> Taxon.create(target, :child) |> Taxon.execute(TestRepo)
 # add as parent
-%Taxon{name: "parent", taxonomy_id: 1} |> Taxon.create(target, :parent)
+%Taxon{name: "parent", taxonomy_id: 1} |> Taxon.create(target, :parent) |> Taxon.execute(TestRepo)
 
 # add as root
-%Taxon{name: "root", taxonomy_id: 1} |> Taxon.create(:root)
+%Taxon{name: "root", taxonomy_id: 1} |> Taxon.create(:root) |> Taxon.execute(TestRepo)
 ```
 
 Remove a specified node and all its descendants
 
 ```elixir
 target = Repo.find!(Taxon, 1)
-Taxon.remove(target)
+Taxon.remove(target) |> Taxon.execute(TestRepo)
 ```
 
 Query different nodes
@@ -112,23 +111,23 @@ Query different nodes
 ```elixir
 
 # find all roots
-Taxon.roots(%{taxonomy_id: 1})
+Taxon.roots(%{taxonomy_id: 1}) |> Taxon.execute(TestRepo)
 
 # find all children of target
-Taxon.children(target)
+Taxon.children(target) |> Taxon.execute(TestRepo)
 
 # find all the leaves for given scope
-Taxon.leaves(%{taxonomy_id: 1})
+Taxon.leaves(%{taxonomy_id: 1}) |> Taxon.execute(TestRepo)
 
 # find all descendants
-Taxon.descendants(target)
+Taxon.descendants(target) |> Taxon.execute(TestRepo)
 # include self
-Taxon.self_and_descendants(target)
+Taxon.self_and_descendants(target) |> Taxon.execute(TestRepo)
 
 # find all ancestors
-Taxon.ancestors(target)
+Taxon.ancestors(target) |> Taxon.execute(TestRepo)
 
 #find all siblings (self included)
-Taxon.self_and_siblings(target)
+Taxon.self_and_siblings(target) |> Taxon.execute(TestRepo)
 
 ```

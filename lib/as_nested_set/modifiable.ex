@@ -17,41 +17,45 @@ defmodule AsNestedSet.Modifiable do
     end
   end
 
-  @spec do_delete(Module.t, any) :: boolean
+  @spec do_delete(Module.t, any) :: (Ecto.Repo.t -> boolean)
   def do_delete(module, model) do
-    left = module.left(model)
-    right = module.right(model)
-    width = right - left + 1
-    from(q in module,
-      where: field(q, ^module.left_column) >= ^left and field(q, ^module.left_column) <= ^right
-    )
-    |> module.scoped_query(model)
-    |> module.repo.delete_all([])
+    fn repo ->
+      left = module.left(model)
+      right = module.right(model)
+      width = right - left + 1
+      from(q in module,
+        where: field(q, ^module.left_column) >= ^left and field(q, ^module.left_column) <= ^right
+      )
+      |> module.scoped_query(model)
+      |> repo.delete_all([])
 
-    from(q in module,
-      where: field(q, ^module.right_column) > ^right,
-      update: [inc: ^[{module.right_column, -width}]]
-    )
-    |> module.scoped_query(model)
-    |> module.repo.update_all([])
+      from(q in module,
+        where: field(q, ^module.right_column) > ^right,
+        update: [inc: ^[{module.right_column, -width}]]
+      )
+      |> module.scoped_query(model)
+      |> repo.update_all([])
 
-    from(q in module,
-      where: field(q, ^module.left_column) > ^right,
-      update: [inc: ^[{module.left_column, -width}]]
-    )
-    |> module.scoped_query(model)
-    |> module.repo.update_all([])
-  end
-
-  @spec do_create(Module.t, any, any, position) :: :ok | {:err, any}
-  def do_create(module, new_model, target, position) do
-    case validate_create(module, new_model, target, position) do
-      :ok -> do_safe_create(module, new_model, reload(module, target), position)
-      error -> error
+      from(q in module,
+        where: field(q, ^module.left_column) > ^right,
+        update: [inc: ^[{module.left_column, -width}]]
+      )
+      |> module.scoped_query(model)
+      |> repo.update_all([])
     end
   end
 
-  defp do_safe_create(module, new_model, target, :left) do
+  @spec do_create(Module.t, any, any, position) :: (Ecto.Repo.t -> :ok | {:err, any})
+  def do_create(module, new_model, target, position) do
+    fn repo ->
+      case validate_create(module, new_model, target, position) do
+        :ok -> do_safe_create(repo, module, new_model, reload(repo, module, target), position)
+        error -> error
+      end
+    end
+  end
+
+  defp do_safe_create(repo, module, new_model, target, :left) do
     left = module.left(target)
     # update all the left and right column
     from(q in module,
@@ -59,14 +63,14 @@ defmodule AsNestedSet.Modifiable do
       update: [inc: ^[{module.left_column, 2}]]
     )
     |> module.scoped_query(target)
-    |> module.repo.update_all([])
+    |> repo.update_all([])
 
     from(q in module,
       where: field(q, ^module.right_column) > ^left,
       update: [inc: ^[{module.right_column, 2}]]
     )
     |> module.scoped_query(target)
-    |> module.repo.update_all([])
+    |> repo.update_all([])
 
     # insert the new model
     new_model
@@ -75,10 +79,10 @@ defmodule AsNestedSet.Modifiable do
         {module.right_column, left + 1},
         {module.parent_id_column, module.parent_id(target)}
       ]))
-    |> module.repo.insert!
+    |> repo.insert!
   end
 
-  defp do_safe_create(module, new_model, target, :right) do
+  defp do_safe_create(repo, module, new_model, target, :right) do
     right = module.right(target)
     # update all the left and right column
     from(q in module,
@@ -86,14 +90,14 @@ defmodule AsNestedSet.Modifiable do
       update: [inc: ^[{module.left_column, 2}]]
     )
     |> module.scoped_query(target)
-    |> module.repo.update_all([])
+    |> repo.update_all([])
 
     from(q in module,
       where: field(q, ^module.right_column) > ^right,
       update: [inc: ^[{module.right_column, 2}]]
     )
     |> module.scoped_query(target)
-    |> module.repo.update_all([])
+    |> repo.update_all([])
 
     # insert new model
     new_model
@@ -102,24 +106,24 @@ defmodule AsNestedSet.Modifiable do
         {module.right_column, right + 2},
         {module.parent_id_column, module.parent_id(target)}
       ]))
-    |> module.repo.insert!
+    |> repo.insert!
   end
 
-  defp do_safe_create(module, new_model, target, :child) do
+  defp do_safe_create(repo, module, new_model, target, :child) do
     right = module.right(target)
     from(q in module,
       where: field(q, ^module.left_column) > ^right,
       update: [inc: ^[{module.left_column, 2}]]
     )
     |> module.scoped_query(target)
-    |> module.repo.update_all([])
+    |> repo.update_all([])
 
     from(q in module,
       where: field(q, ^module.right_column) >= ^right,
       update: [inc: ^[{module.right_column, 2}]]
     )
     |> module.scoped_query(target)
-    |> module.repo.update_all([])
+    |> repo.update_all([])
 
     new_model
     |> module.changeset(Map.new([
@@ -127,22 +131,22 @@ defmodule AsNestedSet.Modifiable do
         {module.right_column, right + 1},
         {module.parent_id_column, module.node_id(target)}
       ]))
-    |> module.repo.insert!
+    |> repo.insert!
   end
 
-  defp do_safe_create(module, new_model, _target, :root) do
-    right_most = module.right_most(new_model) || -1
+  defp do_safe_create(repo, module, new_model, _target, :root) do
+    right_most = module.right_most(new_model).(repo) || -1
 
     new_model = new_model
     |> module.left(right_most + 1)
     |> module.right(right_most + 2)
     |> module.parent_id(nil)
-    |> module.repo.insert!
+    |> repo.insert!
 
     new_model
   end
 
-  defp do_safe_create(module, new_model, target, :parent) do
+  defp do_safe_create(repo, module, new_model, target, :parent) do
     right = module.right(target)
     left = module.left(target)
     from(q in module,
@@ -150,27 +154,27 @@ defmodule AsNestedSet.Modifiable do
       update: [inc: ^[{module.right_column, 2}]]
     )
     |> module.scoped_query(target)
-    |> module.repo.update_all([])
+    |> repo.update_all([])
 
     from(q in module,
       where: field(q, ^module.left_column) > ^right,
       update: [inc: ^[{module.left_column, 2}]]
     )
     |> module.scoped_query(target)
-    |> module.repo.update_all([])
+    |> repo.update_all([])
 
     from(q in module,
       where: field(q, ^module.left_column) >= ^left and field(q, ^module.right_column) <= ^right,
       update: [inc: ^[{module.right_column, 1}, {module.left_column, 1}]]
     )
     |> module.scoped_query(target)
-    |> module.repo.update_all([])
+    |> repo.update_all([])
 
     new_model = new_model
     |> module.left(left)
     |> module.right(right + 2)
     |> module.parent_id(module.parent_id(target))
-    |> module.repo.insert!
+    |> repo.insert!
 
     node_id = module.node_id(target)
 
@@ -179,7 +183,7 @@ defmodule AsNestedSet.Modifiable do
       update: [set: ^[{module.parent_id_column, new_model.id}]]
     )
     |> module.scoped_query(target)
-    |> module.repo.update_all([])
+    |> repo.update_all([])
 
     new_model
   end
@@ -192,17 +196,17 @@ defmodule AsNestedSet.Modifiable do
     end
   end
 
-  defp reload(module, target) when not is_nil(target) do
+  defp reload(repo, module, target) when not is_nil(target) do
     node_id = module.node_id(target)
     from(q in module,
       where: field(q, ^module.node_id_column) == ^node_id,
       limit: 1
     )
     |> module.scoped_query(target)
-    |> module.repo.one
+    |> repo.one
   end
 
-  defp reload(module, target) do
+  defp reload(_repo, _module, target) do
     target
   end
 
