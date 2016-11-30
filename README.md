@@ -87,23 +87,23 @@ Add a new node
 ```elixir
 target = Repo.find!(Taxon, 1)
 # add to left
-%Taxon{name: "left", taxonomy_id: 1} |> Taxon.create(target, :left) |> Taxon.execute(TestRepo)
+%Taxon{name: "left", taxonomy_id: 1} |> AsNestedSet.create(target, :left) |> AsNestedSet.execute(TestRepo)
 # add to right
-%Taxon{name: "right", taxonomy_id: 1} |> Taxon.create(target, :right) |> Taxon.execute(TestRepo)
+%Taxon{name: "right", taxonomy_id: 1} |> AsNestedSet.create(target, :right) |> AsNestedSet.execute(TestRepo)
 # add as first child
-%Taxon{name: "child", taxonomy_id: 1} |> Taxon.create(target, :child) |> Taxon.execute(TestRepo)
+%Taxon{name: "child", taxonomy_id: 1} |> AsNestedSet.create(target, :child) |> AsNestedSet.execute(TestRepo)
 # add as parent
-%Taxon{name: "parent", taxonomy_id: 1} |> Taxon.create(target, :parent) |> Taxon.execute(TestRepo)
+%Taxon{name: "parent", taxonomy_id: 1} |> AsNestedSet.create(target, :parent) |> AsNestedSet.execute(TestRepo)
 
 # add as root
-%Taxon{name: "root", taxonomy_id: 1} |> Taxon.create(:root) |> Taxon.execute(TestRepo)
+%Taxon{name: "root", taxonomy_id: 1} |> AsNestedSet.create(:root) |> AsNestedSet.execute(TestRepo)
 ```
 
 Remove a specified node and all its descendants
 
 ```elixir
 target = Repo.find!(Taxon, 1)
-Taxon.remove(target) |> Taxon.execute(TestRepo)
+AsNestedSet.remove(target) |> AsNestedSet.execute(TestRepo)
 ```
 
 Query different nodes
@@ -111,23 +111,23 @@ Query different nodes
 ```elixir
 
 # find all roots
-Taxon.roots(%{taxonomy_id: 1}) |> Taxon.execute(TestRepo)
+AsNestedSet.roots(Taxon, %{taxonomy_id: 1}) |> AsNestedSet.execute(TestRepo)
 
 # find all children of target
-Taxon.children(target) |> Taxon.execute(TestRepo)
+AsNestedSet.children(target) |> AsNestedSet.execute(TestRepo)
 
 # find all the leaves for given scope
-Taxon.leaves(%{taxonomy_id: 1}) |> Taxon.execute(TestRepo)
+AsNestedSet.leaves(Taxon, %{taxonomy_id: 1}) |> AsNestedSet.execute(TestRepo)
 
 # find all descendants
-Taxon.descendants(target) |> Taxon.execute(TestRepo)
+AsNestedSet.descendants(target) |> AsNestedSet.execute(TestRepo)
 # include self
-Taxon.self_and_descendants(target) |> Taxon.execute(TestRepo)
+AsNestedSet.self_and_descendants(target) |> AsNestedSet.execute(TestRepo)
 
 # find all ancestors
-Taxon.ancestors(target) |> Taxon.execute(TestRepo)
+AsNestedSet.ancestors(target) |> AsNestedSet.execute(TestRepo)
 
 #find all siblings (self included)
-Taxon.self_and_siblings(target) |> Taxon.execute(TestRepo)
+AsNestedSet.self_and_siblings(target) |> AsNestedSet.execute(TestRepo)
 
 ```
