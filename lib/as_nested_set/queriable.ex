@@ -1,193 +1,162 @@
 defmodule AsNestedSet.Queriable do
 
   import Ecto.Query
+  import AsNestedSet.Helper
 
-  defmacro __using__(_args) do
-    quote do
-      def root(scope) do
-        AsNestedSet.Queriable.do_root(__MODULE__, scope)
-      end
-
-      def roots(scope) do
-        AsNestedSet.Queriable.do_roots(__MODULE__, scope)
-      end
-
-      def right_most(scope) do
-        AsNestedSet.Queriable.do_right_most(__MODULE__, scope)
-      end
-
-      def reload(target) do
-        AsNestedSet.Queriable.do_reload(__MODULE__, target)
-      end
-
-      def dump(scope) do
-        AsNestedSet.Queriable.do_dump(__MODULE__, scope)
-      end
-
-      def dump_one(scope) do
-        fn repo ->
-          [dump|_] = AsNestedSet.Queriable.do_dump(__MODULE__, scope).(repo)
-          dump
-        end
-      end
-
-      def children(target) do
-        AsNestedSet.Queriable.do_children(__MODULE__, target)
-      end
-
-      def leaves(scope) do
-        AsNestedSet.Queriable.do_leaves(__MODULE__, scope)
-      end
-
-      def descendants(target) do
-        AsNestedSet.Queriable.do_descendants(__MODULE__, target)
-      end
-
-      def self_and_descendants(target) do
-        AsNestedSet.Queriable.do_self_and_descendants(__MODULE__, target)
-      end
-
-      def ancestors(target) do
-        AsNestedSet.Queriable.do_ancestors(__MODULE__, target)
-      end
-
-      def self_and_siblings(target) do
-        AsNestedSet.Queriable.do_self_and_siblings(__MODULE__, target)
-      end
-    end
-  end
-
-  def do_self_and_siblings(module, target) do
+  def self_and_siblings(%{__struct__: struct} = target) do
     fn repo ->
-      from(q in module,
-        where: field(q, ^module.parent_id_column) == ^module.parent_id(target),
-        order_by: ^[module.left_column]
+      parent_id_column = get_column_name(target, :parent_id)
+      left_column = get_column_name(target, :left)
+      parent_id = get_field(target, :parent_id)
+      from(q in struct,
+        where: field(q, ^parent_id_column) == ^parent_id,
+        order_by: ^[left_column]
       )
-      |> module.scoped_query(target)
+      |> AsNestedSet.Scoped.scoped_query(target)
       |> repo.all
     end
   end
 
-  def do_ancestors(module, target) do
+  def ancestors(%{__struct__: struct} = target) do
     fn repo ->
-      left = module.left(target)
-      right = module.right(target)
-      from(q in module,
-        where: field(q, ^module.left_column) < ^left and field(q, ^module.right_column) > ^right,
-        order_by: ^[module.left_column]
+      left = get_field(target, :left)
+      right = get_field(target, :right)
+      left_column = get_column_name(target, :left)
+      right_column = get_column_name(target, :right)
+      from(q in struct,
+        where: field(q, ^left_column) < ^left and field(q, ^right_column) > ^right,
+        order_by: ^[left_column]
       )
-      |> module.scoped_query(target)
+      |> AsNestedSet.Scoped.scoped_query(target)
       |> repo.all
     end
   end
 
-  def do_self_and_descendants(module, target) do
+  def self_and_descendants(%{__struct__: struct} = target) do
     fn repo ->
-      left = module.left(target)
-      right = module.right(target)
-      from(q in module,
-        where: field(q, ^module.left_column) >= ^left and field(q, ^module.right_column) <= ^right,
-        order_by: ^[module.left_column]
+      left = get_field(target, :left)
+      right = get_field(target, :right)
+      left_column = get_column_name(target, :left)
+      right_column = get_column_name(target, :right)
+      from(q in struct,
+        where: field(q, ^left_column) >= ^left and field(q, ^right_column) <= ^right,
+        order_by: ^[left_column]
       )
-      |> module.scoped_query(target)
+      |> AsNestedSet.Scoped.scoped_query(target)
       |> repo.all
     end
   end
 
-  def do_root(module, scope) do
+  def root(module, scope) when is_atom(module) do
     fn repo ->
+      parent_id_column = get_column_name(module, :parent_id)
       from(q in module,
-        where: is_nil(field(q, ^module.parent_id_column)),
+        where: is_nil(field(q, ^parent_id_column)),
         limit: 1
       )
-      |> module.scoped_query(scope)
+      |> AsNestedSet.Scoped.scoped_query(scope)
       |> repo.one
     end
   end
 
-  def do_roots(module, scope) do
+  def roots(module, scope) when is_atom(module) do
     fn repo ->
+      parent_id_column = get_column_name(module, :parent_id)
+      left_column = get_column_name(module, :left)
       from(q in module,
-        where: is_nil(field(q, ^module.parent_id_column)),
-        order_by: ^[module.left_column]
+        where: is_nil(field(q, ^parent_id_column)),
+        order_by: ^[left_column]
       )
-      |> module.scoped_query(scope)
+      |> AsNestedSet.Scoped.scoped_query(scope)
       |> repo.all
     end
   end
 
-  def do_descendants(module, target) do
+  def descendants(%{__struct__: struct} = target) do
     fn repo ->
-      left = module.left(target)
-      right = module.right(target)
-      from(q in module,
-        where: field(q, ^module.left_column) > ^left and field(q, ^module.right_column) < ^right,
-        order_by: ^[module.left_column]
+      left = get_field(target, :left)
+      right = get_field(target, :right)
+      left_column = get_column_name(target, :left)
+      right_column = get_column_name(target, :right)
+      from(q in struct,
+        where: field(q, ^left_column) > ^left and field(q, ^right_column) < ^right,
+        order_by: ^[left_column]
       )
-      |> module.scoped_query(target)
+      |> AsNestedSet.Scoped.scoped_query(target)
       |> repo.all
     end
   end
 
-  def do_leaves(module, scope) do
+  def leaves(module, scope) when is_atom(module) do
     fn repo ->
+      left_column = get_column_name(module, :left)
+      right_column = get_column_name(module, :right)
       from(q in module,
-        where: fragment("? - ?", field(q, ^module.right_column), field(q, ^module.left_column)) == 1,
-        order_by: ^[module.left_column]
+        where: fragment("? - ?", field(q, ^right_column), field(q, ^left_column)) == 1,
+        order_by: ^[left_column]
       )
-      |> module.scoped_query(scope)
+      |> AsNestedSet.Scoped.scoped_query(scope)
       |> repo.all
     end
   end
 
-  def do_children(module, target) do
+  def children(%{__struct__: struct} = target) do
     fn repo ->
-      from(q in module,
-        where: field(q, ^module.parent_id_column) == ^module.node_id(target),
-        order_by: ^[module.left_column]
+      parent_id_column = get_column_name(target, :parent_id)
+      left_column = get_column_name(target, :left)
+      node_id = get_field(target, :node_id)
+      from(q in struct,
+        where: field(q, ^parent_id_column) == ^node_id,
+        order_by: ^[left_column]
       )
-      |> module.scoped_query(target)
+      |> AsNestedSet.Scoped.scoped_query(target)
       |> repo.all
     end
   end
 
-  def do_dump(module, scope, parent_id \\ nil) do
+  def dump(module, scope, parent_id \\ nil) do
     fn repo ->
+      parent_id_column = get_column_name(module, :parent_id)
+      left_column = get_column_name(module, :left)
+
       children = if parent_id do
         from(q in module,
-          where: field(q, ^module.parent_id_column) == ^parent_id,
-          order_by: ^[module.left_column]
+          where: field(q, ^parent_id_column) == ^parent_id,
+          order_by: ^[left_column]
         )
       else
         from(q in module,
-          where: is_nil(field(q, ^module.parent_id_column)),
-          order_by: ^[module.left_column]
+          where: is_nil(field(q, ^parent_id_column)),
+          order_by: ^[left_column]
         )
       end
-      |> module.scoped_query(scope)
+      |> AsNestedSet.Scoped.scoped_query(scope)
       |> repo.all
+
       Enum.map(children, fn(child) ->
-        {child, do_dump(module, scope, module.node_id(child)).(repo)}
+        node_id = get_field(child, :node_id)
+        {child, dump(module, scope, node_id).(repo)}
       end)
     end
   end
 
-  def do_reload(module, target) do
+  def dump_one(module, scope) do
     fn repo ->
-      from(q in module,
-        where: field(q, ^module.node_id_column) == ^module.node_id(target)
-      )
-      |> module.scoped_query(target)
-      |> repo.one!
+      case dump(module, scope).(repo) do
+        [dump|_] -> dump
+        error -> error
+      end
     end
   end
 
-  def do_right_most(module, scope) do
+
+  def right_most(module, scope) do
     fn repo ->
+      right_column = get_column_name(module, :right)
       from(q in module,
-        select: max(field(q, ^module.right_column))
+        select: max(field(q, ^right_column))
       )
-      |> module.scoped_query(scope)
+      |> AsNestedSet.Scoped.scoped_query(scope)
       |> repo.one!
     end
   end

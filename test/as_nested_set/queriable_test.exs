@@ -7,6 +7,9 @@ defmodule AsNestedSet.QueriableTest do
 
   alias AsNestedSet.TestRepo, as: Repo
 
+  import AsNestedSet.Queriable
+
+
   @doc """
   Create a nested set tree
   +--------------------+
@@ -38,24 +41,28 @@ defmodule AsNestedSet.QueriableTest do
       {n1, []}
     ]
   end
+  
+  def execute(executable) do
+    AsNestedSet.execute(executable, Repo)
+  end
 
-  test "right_most/1 works find" do
+  test "right_most/2 works find" do
     create_tree(1)
-    assert Taxon.right_most(%{taxonomy_id: 1}) |> Taxon.execute(Repo) == 9
+    assert right_most(Taxon, %{taxonomy_id: 1}) |> execute() == 9
   end
 
   test "children/1 should get all children in the right sequence" do
     {root, [{no_child, []}, _]} = create_tree(1)
-    assert match(Taxon.children(root) |> Taxon.execute(Repo),[
+    assert match(children(root) |> execute(),[
       %{name: "n00", lft: 1, rgt: 2, taxonomy_id: 1},
       %{name: "n01", lft: 3, rgt: 8, taxonomy_id: 1},
     ])
-    assert match(Taxon.children(no_child) |> Taxon.execute(Repo), [])
+    assert match(children(no_child) |> execute(), [])
   end
 
-  test "leaves/1 should return all leaves" do
+  test "leaves/2 should return all leaves" do
     create_tree(1)
-    assert match(Taxon.leaves(%{taxonomy_id: 1}) |> Taxon.execute(Repo), [
+    assert match(leaves(Taxon, %{taxonomy_id: 1}) |> execute(), [
       %{name: "n00", lft: 1, rgt: 2, taxonomy_id: 1},
       %{name: "n010", lft: 4, rgt: 5, taxonomy_id: 1},
       %{name: "n011", lft: 6, rgt: 7, taxonomy_id: 1},
@@ -64,7 +71,7 @@ defmodule AsNestedSet.QueriableTest do
 
   test "descendants/1 should return all decendants" do
     {root, _} = create_tree(1)
-    assert match(Taxon.descendants(root) |> Taxon.execute(Repo), [
+    assert match(descendants(root) |> execute(), [
       %{name: "n00", lft: 1, rgt: 2, taxonomy_id: 1},
       %{name: "n01", lft: 3, rgt: 8, taxonomy_id: 1},
       %{name: "n010", lft: 4, rgt: 5, taxonomy_id: 1},
@@ -74,23 +81,23 @@ defmodule AsNestedSet.QueriableTest do
 
   test "descendants/1 returns [] for node without child" do
     {_, [{no_child, []}|_]} = create_tree(1)
-    assert Taxon.descendants(no_child) |> Taxon.execute(Repo) == []
+    assert descendants(no_child) |> execute() == []
   end
 
-  test "root/1 returns nil for emtpy tree" do
-    assert Taxon.root(%{taxonomy_id: 1}) |> Taxon.execute(Repo) == nil
+  test "root/2 returns nil for emtpy tree" do
+    assert root(Taxon, %{taxonomy_id: 1}) |> execute() == nil
   end
 
-  test "root/1 returns the root of the tree" do
+  test "root/2 returns the root of the tree" do
     create_tree(1)
-    assert match(Taxon.root(%{taxonomy_id: 1}) |> Taxon.execute(Repo),
+    assert match(root(Taxon, %{taxonomy_id: 1}) |> execute(),
       %{name: "n0", lft: 0, rgt: 9, taxonomy_id: 1}
     )
   end
 
-  test "roots/1 returns the roots of the forest" do
+  test "roots/2 returns the roots of the forest" do
     create_forest(1)
-    assert match(Taxon.roots(%{taxonomy_id: 1}) |> Taxon.execute(Repo), [
+    assert match(roots(Taxon, %{taxonomy_id: 1}) |> execute(), [
       %{name: "n0", lft: 0, rgt: 1, taxonomy_id: 1},
       %{name: "n1", lft: 2, rgt: 3, taxonomy_id: 1}
     ])
@@ -98,7 +105,7 @@ defmodule AsNestedSet.QueriableTest do
 
   test "self_and_descendants/1 should returns self and all descendants" do
     {_, [_, {target, _}|_]} = create_tree(1)
-    assert match(Taxon.self_and_descendants(target) |> Taxon.execute(Repo), [
+    assert match(self_and_descendants(target) |> execute(), [
       %{name: "n01", lft: 3, rgt: 8, taxonomy_id: 1},
       %{name: "n010", lft: 4, rgt: 5, taxonomy_id: 1},
       %{name: "n011", lft: 6, rgt: 7, taxonomy_id: 1}
@@ -107,7 +114,7 @@ defmodule AsNestedSet.QueriableTest do
 
   test "ancestors/1 should return all its ancestors" do
     {_, [_, {_, [{target, []}|_]}|_]} = create_tree(1)
-    assert match(Taxon.ancestors(target) |> Taxon.execute(Repo), [
+    assert match(ancestors(target) |> execute(), [
       %{name: "n0", lft: 0, rgt: 9, taxonomy_id: 1},
       %{name: "n01", lft: 3, rgt: 8, taxonomy_id: 1}
     ])
@@ -115,7 +122,7 @@ defmodule AsNestedSet.QueriableTest do
 
   test "self_and_siblings/1 should return self and all its sliblings" do
     {_, [{target, _}|_]} = create_tree(1)
-    assert match(Taxon.self_and_siblings(target) |> Taxon.execute(Repo), [
+    assert match(self_and_siblings(target) |> execute(), [
       %{name: "n00", lft: 1, rgt: 2, taxonomy_id: 1},
       %{name: "n01", lft: 3, rgt: 8, taxonomy_id: 1}
     ])

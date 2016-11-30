@@ -28,7 +28,7 @@ defmodule AsNestedSet.Model do
     Enum.map(fields, fn
        {name, column_name}->
         quote do
-          def __as_nested_set_field__(unquote(name)) do
+          def __as_nested_set_column_name__(unquote(name)) do
             unquote(column_name)
           end
           def __as_nested_set_get_field__(model, unquote(name)) do

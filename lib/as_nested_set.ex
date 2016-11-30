@@ -9,6 +9,8 @@ defmodule AsNestedSet do
 
   @type t :: struct
 
+  @type executable :: (Ecto.Repo.t -> any)
+
   @spec defined?(struct) :: boolean
   def defined?(%{__struct__: struct}) do
     try do
@@ -21,19 +23,26 @@ defmodule AsNestedSet do
   end
   def defined?(_), do: false
 
-  def get_field(%{__struct__: struct} = model, field) do
-    struct.__as_nested_set_get_field__(model, field)
+  @spec execute((Ecto.Repo.t -> any), Ecto.Repo.t) :: any
+  def execute(call, repo) do
+    call.(repo)
   end
 
-  def set_field(%{__struct__: struct} = model, field, value) do
-    struct.__as_nested_set_set_field__(model, field, value)
-  end
+  defdelegate create(new_model, position), to: AsNestedSet.Modifiable
+  defdelegate create(new_model, target, position), to: AsNestedSet.Modifiable
+  defdelegate reload(model), to: AsNestedSet.Modifiable
+  defdelegate delete(model), to: AsNestedSet.Modifiable
 
-  def fields(module) when is_atom(module) do
-    module.__as_nested_set_fields__()
-  end
-
-  def scope(module) when is_atom(module) do
-    module.__as_nested_set_scope__()
-  end
+  defdelegate self_and_siblings(target), to: AsNestedSet.Queriable
+  defdelegate ancestors(target), to: AsNestedSet.Queriable
+  defdelegate self_and_descendants(target), to: AsNestedSet.Queriable
+  defdelegate root(module, scope), to: AsNestedSet.Queriable
+  defdelegate roots(module, scope), to: AsNestedSet.Queriable
+  defdelegate descendants(target), to: AsNestedSet.Queriable
+  defdelegate leaves(module, scope), to: AsNestedSet.Queriable
+  defdelegate children(target), to: AsNestedSet.Queriable
+  defdelegate dump(module, scope), to: AsNestedSet.Queriable
+  defdelegate dump(module, scope, parent_id), to: AsNestedSet.Queriable
+  defdelegate dump_one(module, scope), to: AsNestedSet.Queriable
+  defdelegate right_most(module, scope), to: AsNestedSet.Queriable
 end

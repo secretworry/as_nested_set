@@ -2,10 +2,13 @@ defmodule AsNestedSet.ModifiableTest do
 
   use AsNestedSet.EctoCase
 
-  import AsNestedSet.Factory
+  import AsNestedSet.Factory, only: [insert: 2]
   import AsNestedSet.Matcher
   alias AsNestedSet.Taxon
   alias AsNestedSet.TestRepo, as: Repo
+
+  import AsNestedSet.Modifiable
+  import AsNestedSet.Queriable, only: [dump: 2, dump_one: 2]
 
   @doc """
   Create a nested set tree
@@ -30,22 +33,26 @@ defmodule AsNestedSet.ModifiableTest do
     ]}
   end
 
-  test "create/3 should return {:err, :not_the_same_scope} for creating node from another scope" do
-    node = insert(:taxon, lft: 0, rgt: 1, taxonomy_id: 0)
-    assert Taxon.create(%Taxon{taxonomy_id: 1}, node , :child) |> Taxon.execute(Repo) == {:err, :not_the_same_scope}
+  def execute(executable) do
+    AsNestedSet.execute(executable, Repo)
   end
 
-  test "create/3 should return {:err, :target_is_required} for creating without passing a target" do
+  test "create/3 should return {:error, :not_the_same_scope} for creating node from another scope" do
+    node = insert(:taxon, lft: 0, rgt: 1, taxonomy_id: 0)
+    assert create(%Taxon{taxonomy_id: 1}, node , :child) |> execute == {:error, :not_the_same_scope}
+  end
+
+  test "create/3 should return {:error, :target_is_required} for creating without passing a target" do
     insert(:taxon, lft: 0, rgt: 1, taxonomy_id: 0)
-    assert Taxon.create(%Taxon{taxonomy_id: 1}, :child) |> Taxon.execute(Repo) == {:err, :target_is_required}
+    assert create(%Taxon{taxonomy_id: 1}, :child) |> execute == {:error, :target_is_required}
   end
 
   test "create/3 should create left node" do
     {_, [{target, _}|_]} = create_tree(1)
 
-    %Taxon{name: "left", taxonomy_id: 1} |> Taxon.create(target, :left) |> Taxon.execute(Repo)
+    %Taxon{name: "left", taxonomy_id: 1} |> create(target, :left) |> execute
 
-    assert match(Taxon.dump_one(%{taxonomy_id: 1}) |> Taxon.execute(Repo),
+    assert match(dump_one(Taxon, %{taxonomy_id: 1}) |> execute,
       {%{name: "n0", lft: 0, rgt: 11, taxonomy_id: 1}, [
         {%{ name: "left", lft: 1, rgt: 2, taxonomy_id: 1}, []},
         {%{ name: "n00", lft: 3, rgt: 4, taxonomy_id: 1}, []},
@@ -59,8 +66,8 @@ defmodule AsNestedSet.ModifiableTest do
 
   test "create/3 should create right node" do
     {_, [{target, _}|_]} = create_tree(1)
-    %Taxon{name: "right", taxonomy_id: 1} |> Taxon.create(target, :right) |> Taxon.execute(Repo)
-    assert match(Taxon.dump_one(%{taxonomy_id: 1}) |> Taxon.execute(Repo),
+    %Taxon{name: "right", taxonomy_id: 1} |> create(target, :right) |> execute
+    assert match(dump_one(Taxon, %{taxonomy_id: 1}) |> execute,
       {%{name: "n0", lft: 0, rgt: 11, taxonomy_id: 1}, [
         {%{ name: "n00", lft: 1, rgt: 2, taxonomy_id: 1}, []},
         {%{ name: "right", lft: 3, rgt: 4, taxonomy_id: 1}, []},
@@ -74,9 +81,9 @@ defmodule AsNestedSet.ModifiableTest do
 
   test "create/3 should create child node" do
     {_, [{target, _}|_]} = create_tree(1)
-    %Taxon{name: "child", taxonomy_id: 1} |> Taxon.create(target, :child) |> Taxon.execute(Repo)
+    %Taxon{name: "child", taxonomy_id: 1} |> create(target, :child) |> execute
 
-    assert match(Taxon.dump_one(%{taxonomy_id: 1}) |> Taxon.execute(Repo),
+    assert match(dump_one(Taxon, %{taxonomy_id: 1}) |> execute,
       {%{name: "n0", lft: 0, rgt: 11, taxonomy_id: 1}, [
         {%{ name: "n00", lft: 1, rgt: 4, taxonomy_id: 1}, [
           {%{ name: "child", lft: 2, rgt: 3, taxonomy_id: 1}, []}
@@ -90,16 +97,16 @@ defmodule AsNestedSet.ModifiableTest do
   end
 
   test "create/2 should create root node for empty tree" do
-    %Taxon{name: "root", taxonomy_id: 1} |> Taxon.create(:root) |> Taxon.execute(Repo)
-    assert match(Taxon.dump_one(%{taxonomy_id: 1}) |> Taxon.execute(Repo),
+    %Taxon{name: "root", taxonomy_id: 1} |> create(:root) |> execute
+    assert match(dump_one(Taxon, %{taxonomy_id: 1}) |> execute,
       {%{name: "root", lft: 0, rgt: 1, taxonomy_id: 1}, []}
     )
   end
 
   test "create/2 should create root node" do
     create_tree(1)
-    %Taxon{name: "root", taxonomy_id: 1} |> Taxon.create(:root) |> Taxon.execute(Repo)
-    assert match(Taxon.dump(%{taxonomy_id: 1}) |> Taxon.execute(Repo), [
+    %Taxon{name: "root", taxonomy_id: 1} |> create(:root) |> execute
+    assert match(dump(Taxon, %{taxonomy_id: 1}) |> execute, [
       {%{name: "n0", lft: 0, rgt: 9, taxonomy_id: 1}, [
         {%{ name: "n00", lft: 1, rgt: 2, taxonomy_id: 1}, []},
         {%{ name: "n01", lft: 3, rgt: 8, taxonomy_id: 1}, [
@@ -113,8 +120,8 @@ defmodule AsNestedSet.ModifiableTest do
 
   test "create/2 should create parent node" do
     {_, [{target, _}|_]} = create_tree(1)
-    %Taxon{name: "parent", taxonomy_id: 1} |> Taxon.create(target, :parent) |> Taxon.execute(Repo)
-    assert match(Taxon.dump_one(%{taxonomy_id: 1}) |> Taxon.execute(Repo), {
+    %Taxon{name: "parent", taxonomy_id: 1} |> create(target, :parent) |> execute
+    assert match(dump_one(Taxon, %{taxonomy_id: 1}) |> execute, {
       %{name: "n0", lft: 0, rgt: 11, taxonomy_id: 1}, [
         {%{name: "parent", lft: 1, rgt: 4, taxonomy_id: 1}, [
           {%{ name: "n00", lft: 2, rgt: 3, taxonomy_id: 1}, []},
@@ -130,8 +137,8 @@ defmodule AsNestedSet.ModifiableTest do
   test "create/3 should not affect other tree" do
     create_tree(1)
     create_tree(2)
-    %Taxon{name: "root", taxonomy_id: 1} |> Taxon.create(:root) |> Taxon.execute(Repo)
-    assert match(Taxon.dump_one(%{taxonomy_id: 2}) |> Taxon.execute(Repo),
+    %Taxon{name: "root", taxonomy_id: 1} |> create(:root) |> execute
+    assert match(dump_one(Taxon, %{taxonomy_id: 2}) |> execute,
       {%{name: "n0", lft: 0, rgt: 9, taxonomy_id: 2}, [
         {%{ name: "n00", lft: 1, rgt: 2, taxonomy_id: 2}, []},
         {%{ name: "n01", lft: 3, rgt: 8, taxonomy_id: 2}, [
@@ -144,8 +151,8 @@ defmodule AsNestedSet.ModifiableTest do
 
   test "delete/1 should delete a node and all its descendants" do
     {_, [_,{target, _}]} = create_tree(1)
-    Taxon.delete(target) |> Taxon.execute(Repo)
-    assert match(Taxon.dump_one(%{taxonomy_id: 1}) |> Taxon.execute(Repo),
+    delete(target) |> execute
+    assert match(dump_one(Taxon, %{taxonomy_id: 1}) |> execute,
       {%{name: "n0", lft: 0, rgt: 3, taxonomy_id: 1}, [
         {%{ name: "n00", lft: 1, rgt: 2, taxonomy_id: 1}, []}
       ]}
@@ -153,10 +160,10 @@ defmodule AsNestedSet.ModifiableTest do
   end
 
   test "create/3 should create consecutive children" do
-    root = %Taxon{name: "root", taxonomy_id: 1} |> Taxon.create(:root) |> Taxon.execute(Repo)
-    %Taxon{name: "child0", taxonomy_id: 1} |> Taxon.create(root, :child) |> Taxon.execute(Repo)
-    %Taxon{name: "child1", taxonomy_id: 1} |> Taxon.create(root, :child) |> Taxon.execute(Repo)
-    assert match(Taxon.dump_one(%{taxonomy_id: 1}) |> Taxon.execute(Repo),
+    root = %Taxon{name: "root", taxonomy_id: 1} |> create(:root) |> execute
+    %Taxon{name: "child0", taxonomy_id: 1} |> create(root, :child) |> execute
+    %Taxon{name: "child1", taxonomy_id: 1} |> create(root, :child) |> execute
+    assert match(dump_one(Taxon, %{taxonomy_id: 1}) |> execute,
       {%{name: "root", lft: 0, rgt: 5, taxonomy_id: 1}, [
         {%{name: "child0", lft: 1, rgt: 2, taxonomy_id: 1}, []},
         {%{name: "child1", lft: 3, rgt: 4, taxonomy_id: 1}, []}

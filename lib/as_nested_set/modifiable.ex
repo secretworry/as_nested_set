@@ -3,211 +3,234 @@ defmodule AsNestedSet.Modifiable do
   @type position :: :left | :right | :child | :parent
 
   import Ecto.Query
+  import AsNestedSet.Helper
 
-  defmacro __using__(_args) do
-    quote do
-
-      def create(new_model, target \\ nil, position) when is_atom(position) do
-        AsNestedSet.Modifiable.do_create(__MODULE__, new_model, target, position)
-      end
-
-      def delete(model) do
-        AsNestedSet.Modifiable.do_delete(__MODULE__, model)
-      end
-    end
-  end
-
-  @spec do_delete(Module.t, any) :: (Ecto.Repo.t -> boolean)
-  def do_delete(module, model) do
+  @spec create(AsNestedSet.t, AsNestedSet.t, position) :: AsNestedSet.executable
+  def create(new_model, target \\ nil, position) when is_atom(position) do
     fn repo ->
-      left = module.left(model)
-      right = module.right(model)
-      width = right - left + 1
-      from(q in module,
-        where: field(q, ^module.left_column) >= ^left and field(q, ^module.left_column) <= ^right
-      )
-      |> module.scoped_query(model)
-      |> repo.delete_all([])
-
-      from(q in module,
-        where: field(q, ^module.right_column) > ^right,
-        update: [inc: ^[{module.right_column, -width}]]
-      )
-      |> module.scoped_query(model)
-      |> repo.update_all([])
-
-      from(q in module,
-        where: field(q, ^module.left_column) > ^right,
-        update: [inc: ^[{module.left_column, -width}]]
-      )
-      |> module.scoped_query(model)
-      |> repo.update_all([])
-    end
-  end
-
-  @spec do_create(Module.t, any, any, position) :: (Ecto.Repo.t -> :ok | {:err, any})
-  def do_create(module, new_model, target, position) do
-    fn repo ->
-      case validate_create(module, new_model, target, position) do
-        :ok -> do_safe_create(repo, module, new_model, reload(repo, module, target), position)
+      case validate_create(new_model, target, position) do
+        :ok -> do_safe_create(repo, new_model, do_reload(repo, target), position)
         error -> error
       end
     end
   end
 
-  defp do_safe_create(repo, module, new_model, target, :left) do
-    left = module.left(target)
-    # update all the left and right column
-    from(q in module,
-      where: field(q, ^module.left_column) >= ^left,
-      update: [inc: ^[{module.left_column, 2}]]
-    )
-    |> module.scoped_query(target)
-    |> repo.update_all([])
-
-    from(q in module,
-      where: field(q, ^module.right_column) > ^left,
-      update: [inc: ^[{module.right_column, 2}]]
-    )
-    |> module.scoped_query(target)
-    |> repo.update_all([])
-
-    # insert the new model
-    new_model
-    |> module.changeset(Map.new([
-        {module.left_column, left},
-        {module.right_column, left + 1},
-        {module.parent_id_column, module.parent_id(target)}
-      ]))
-    |> repo.insert!
+  @spec reload(AsNestedSet.t) :: AsNestedSet.executable
+  def reload(model) do
+    fn repo ->
+      do_reload(repo, model)
+    end
   end
 
-  defp do_safe_create(repo, module, new_model, target, :right) do
-    right = module.right(target)
-    # update all the left and right column
-    from(q in module,
-      where: field(q, ^module.left_column) > ^right,
-      update: [inc: ^[{module.left_column, 2}]]
-    )
-    |> module.scoped_query(target)
-    |> repo.update_all([])
-
-    from(q in module,
-      where: field(q, ^module.right_column) > ^right,
-      update: [inc: ^[{module.right_column, 2}]]
-    )
-    |> module.scoped_query(target)
-    |> repo.update_all([])
-
-    # insert new model
-    new_model
-    |> module.changeset(Map.new([
-        {module.left_column, right + 1},
-        {module.right_column, right + 2},
-        {module.parent_id_column, module.parent_id(target)}
-      ]))
-    |> repo.insert!
-  end
-
-  defp do_safe_create(repo, module, new_model, target, :child) do
-    right = module.right(target)
-    from(q in module,
-      where: field(q, ^module.left_column) > ^right,
-      update: [inc: ^[{module.left_column, 2}]]
-    )
-    |> module.scoped_query(target)
-    |> repo.update_all([])
-
-    from(q in module,
-      where: field(q, ^module.right_column) >= ^right,
-      update: [inc: ^[{module.right_column, 2}]]
-    )
-    |> module.scoped_query(target)
-    |> repo.update_all([])
-
-    new_model
-    |> module.changeset(Map.new([
-        {module.left_column, right},
-        {module.right_column, right + 1},
-        {module.parent_id_column, module.node_id(target)}
-      ]))
-    |> repo.insert!
-  end
-
-  defp do_safe_create(repo, module, new_model, _target, :root) do
-    right_most = module.right_most(new_model).(repo) || -1
-
-    new_model = new_model
-    |> module.left(right_most + 1)
-    |> module.right(right_most + 2)
-    |> module.parent_id(nil)
-    |> repo.insert!
-
-    new_model
-  end
-
-  defp do_safe_create(repo, module, new_model, target, :parent) do
-    right = module.right(target)
-    left = module.left(target)
-    from(q in module,
-      where: field(q, ^module.right_column) > ^right,
-      update: [inc: ^[{module.right_column, 2}]]
-    )
-    |> module.scoped_query(target)
-    |> repo.update_all([])
-
-    from(q in module,
-      where: field(q, ^module.left_column) > ^right,
-      update: [inc: ^[{module.left_column, 2}]]
-    )
-    |> module.scoped_query(target)
-    |> repo.update_all([])
-
-    from(q in module,
-      where: field(q, ^module.left_column) >= ^left and field(q, ^module.right_column) <= ^right,
-      update: [inc: ^[{module.right_column, 1}, {module.left_column, 1}]]
-    )
-    |> module.scoped_query(target)
-    |> repo.update_all([])
-
-    new_model = new_model
-    |> module.left(left)
-    |> module.right(right + 2)
-    |> module.parent_id(module.parent_id(target))
-    |> repo.insert!
-
-    node_id = module.node_id(target)
-
-    from(q in module,
-      where: field(q, ^module.node_id_column) == ^node_id,
-      update: [set: ^[{module.parent_id_column, new_model.id}]]
-    )
-    |> module.scoped_query(target)
-    |> repo.update_all([])
-
-    new_model
-  end
-
-  defp validate_create(module, new_model, parent, position) do
+  defp validate_create(new_model, parent, position) do
     cond do
-      parent == nil && position != :root -> {:err, :target_is_required}
-      position != :root && !module.same_scope?(parent, new_model) -> {:err, :not_the_same_scope}
+      parent == nil && position != :root -> {:error, :target_is_required}
+      position != :root && !AsNestedSet.Scoped.same_scope?(parent, new_model) -> {:error, :not_the_same_scope}
       true -> :ok
     end
   end
 
-  defp reload(repo, module, target) when not is_nil(target) do
-    node_id = module.node_id(target)
-    from(q in module,
-      where: field(q, ^module.node_id_column) == ^node_id,
+  defp do_safe_create(repo, %{__struct__: struct} = new_model, target, :left) do
+    left = get_field(target, :left)
+    left_column = get_column_name(target, :left)
+    right_column = get_column_name(target, :right)
+    # update all the left and right column
+    from(q in struct,
+      where: field(q, ^left_column) >= ^left,
+      update: [inc: ^[{left_column, 2}]]
+    )
+    |> AsNestedSet.Scoped.scoped_query(target)
+    |> repo.update_all([])
+
+    from(q in struct,
+      where: field(q, ^right_column) > ^left,
+      update: [inc: ^[{right_column, 2}]]
+    )
+    |> AsNestedSet.Scoped.scoped_query(target)
+    |> repo.update_all([])
+
+
+    parent_id_column = get_column_name(target, :parent_id)
+    parent_id = get_field(target, :parent_id)
+    # insert the new model
+    new_model
+    |> struct.changeset(Map.new([
+        {left_column, left},
+        {right_column, left + 1},
+        {parent_id_column, parent_id}
+      ]))
+    |> repo.insert!
+  end
+
+  defp do_safe_create(repo, %{__struct__: struct} = new_model, target, :right) do
+    right = get_field(target, :right)
+    left_column = get_column_name(target, :left)
+    # update all the left and right column
+    from(q in struct,
+      where: field(q, ^left_column) > ^right,
+      update: [inc: ^[{left_column, 2}]]
+    )
+    |> AsNestedSet.Scoped.scoped_query(target)
+    |> repo.update_all([])
+
+    right_column = get_column_name(target, :right)
+    from(q in struct,
+      where: field(q, ^right_column) > ^right,
+      update: [inc: ^[{right_column, 2}]]
+    )
+    |> AsNestedSet.Scoped.scoped_query(target)
+    |> repo.update_all([])
+
+    parent_id_column = get_column_name(target, :parent_id)
+    parent_id = get_field(target, :parent_id)
+    # insert new model
+    new_model
+    |> struct.changeset(Map.new([
+        {left_column, right + 1},
+        {right_column, right + 2},
+        {parent_id_column, parent_id}
+      ]))
+    |> repo.insert!
+  end
+
+  defp do_safe_create(repo, %{__struct__: struct} = new_model, target, :child) do
+
+    left_column = get_column_name(target, :left)
+
+    right = get_field(target, :right)
+    from(q in struct,
+      where: field(q, ^left_column) > ^right,
+      update: [inc: ^[{left_column, 2}]]
+    )
+    |> AsNestedSet.Scoped.scoped_query(target)
+    |> repo.update_all([])
+
+    right_column = get_column_name(target, :right)
+    from(q in struct,
+      where: field(q, ^right_column) >= ^right,
+      update: [inc: ^[{right_column, 2}]]
+    )
+    |> AsNestedSet.Scoped.scoped_query(target)
+    |> repo.update_all([])
+
+
+    parent_id_column = get_column_name(target, :parent_id)
+    node_id = get_field(target, :node_id)
+    new_model
+    |> struct.changeset(Map.new([
+        {left_column, right},
+        {right_column, right + 1},
+        {parent_id_column, node_id}
+      ]))
+    |> repo.insert!
+  end
+
+  defp do_safe_create(repo, %{__struct__: struct} = new_model, _target, :root) do
+    right_most = AsNestedSet.Queriable.right_most(struct, new_model).(repo) || -1
+
+    new_model = new_model
+    |> set_field(:left, right_most + 1)
+    |> set_field(:right, right_most + 2)
+    |> set_field(:parent_id, nil)
+    |> repo.insert!
+
+    new_model
+  end
+
+  defp do_safe_create(repo, %{__struct__: struct} = new_model, target, :parent) do
+    right = get_field(target, :right)
+    left = get_field(target, :left)
+
+    right_column = get_column_name(target, :right)
+    from(q in struct,
+      where: field(q, ^right_column) > ^right,
+      update: [inc: ^[{right_column, 2}]]
+    )
+    |> AsNestedSet.Scoped.scoped_query(target)
+    |> repo.update_all([])
+
+    left_column = get_column_name(target, :left)
+    from(q in struct,
+      where: field(q, ^left_column) > ^right,
+      update: [inc: ^[{left_column, 2}]]
+    )
+    |> AsNestedSet.Scoped.scoped_query(target)
+    |> repo.update_all([])
+
+    from(q in struct,
+      where: field(q, ^left_column) >= ^left and field(q, ^right_column) <= ^right,
+      update: [inc: ^[{right_column, 1}, {left_column, 1}]]
+    )
+    |> AsNestedSet.Scoped.scoped_query(target)
+    |> repo.update_all([])
+
+    parent_id = get_field(target, :parent_id)
+    new_model = new_model
+    |> set_field(:left, left)
+    |> set_field(:right, right + 2)
+    |> set_field(:parent_id, parent_id)
+    |> repo.insert!
+
+    node_id = get_field(target, :node_id)
+    node_id_column = get_column_name(target, :node_id)
+    parent_id_column = get_column_name(target, :parent_id)
+
+    new_model_id = get_field(new_model, :node_id)
+
+    from(q in struct,
+      where: field(q, ^node_id_column) == ^node_id,
+      update: [set: ^[{parent_id_column, new_model_id}]]
+    )
+    |> AsNestedSet.Scoped.scoped_query(target)
+    |> repo.update_all([])
+
+    new_model
+  end
+
+  defp do_reload(_repo, nil), do: nil
+
+  defp do_reload(repo, %{__struct__: struct} = target) do
+    node_id = get_field(target, :node_id)
+    node_id_column = get_column_name(target, :node_id)
+    from(q in struct,
+      where: field(q, ^node_id_column) == ^node_id,
       limit: 1
     )
-    |> module.scoped_query(target)
+    |> AsNestedSet.Scoped.scoped_query(target)
     |> repo.one
   end
 
-  defp reload(_repo, _module, target) do
-    target
+  @spec delete(AsNestedSet.t) :: AsNestedSet.exectuable
+  def delete(%{__struct__: struct} = model) do
+    fn repo ->
+      left = get_field(model, :left)
+      right = get_field(model, :right)
+      width = right - left + 1
+
+      left_column = get_column_name(model, :left)
+      right_column = get_column_name(model, :right)
+
+      from(q in struct,
+        where: field(q, ^left_column) >= ^left and field(q, ^left_column) <= ^right
+      )
+      |> AsNestedSet.Scoped.scoped_query(model)
+      |> repo.delete_all([])
+
+      from(q in struct,
+        where: field(q, ^right_column) > ^right,
+        update: [inc: ^[{right_column, -width}]]
+      )
+      |> AsNestedSet.Scoped.scoped_query(model)
+      |> repo.update_all([])
+
+      from(q in struct,
+        where: field(q, ^left_column) > ^right,
+        update: [inc: ^[{left_column, -width}]]
+      )
+      |> AsNestedSet.Scoped.scoped_query(model)
+      |> repo.update_all([])
+    end
   end
+
 
 end
