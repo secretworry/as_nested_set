@@ -12,44 +12,60 @@ defmodule AsNestedSet.Scoped do
   defmacro __before_compile__(env) do
     scope = Module.get_attribute(env.module, :scope)
     quote do
-      @spec same_scope?(any, any) :: boolean
-      def same_scope?(source, target) do
-        AsNestedSet.Scoped.do_same_scope?(source, target, unquote(scope))
-      end
-
-      @spec scoped_query(Ecto.Query.t, any) :: Ecto.Query.t
-      def scoped_query(query, target) do
-        AsNestedSet.Scoped.do_scoped_query(__MODULE__, @scope, query, target)
-      end
-
-      @spec assign_scope_from(any, any) :: any
-      def assign_scope_from(target, source) do
-        Enum.reduce(@scope, target, fn(scope, acc) ->
-          Map.put(acc, scope, Map.fetch!(source, scope))
-        end)
-      end
-
-      @spec scope(any) :: Map.t
-      def scope(target) do
-        Enum.reduce(@scope, %{}, fn(acc, scope) ->
-          Map.put(acc, scope, Map.fetch!(target, scope))
-        end)
-      end
+      def __as_nested_set_scope__(), do: unquote(scope)
     end
   end
 
-  @spec do_scoped_query(Module.t, [atom], Ecto.Query.t, any) :: Ecto.Query.t
-  def do_scoped_query(_module, scopes, query, target) do
+  @spec same_scope?(AsNestedSet.t, AsNestedSet.t) :: boolean
+  def same_scope?(source, target) do
+    AsNestedSet.defined?(source)
+    && AsNestedSet.defined?(target)
+    && source.__struct__ == target.__struct__
+    && do_same_scope?(source, target)
+  end
+
+  @spec scoped_query(Ecto.Query.t, AsNestedSet.t) :: Ecto.Query.t
+  def scoped_query(query, target) do
+    {_, module} = query
+    assert_as_nested_set(module)
+    do_scoped_query(query, target, module.__as_nested_set_scope__)
+  end
+
+  @spec assign_scope_from(any, any) :: any
+  def assign_scope_from(%{__struct__: struct} = target, %{__struct__: struct} = source) do
+    assert_as_nested_set(struct)
+    scope = struct.__as_nested_set_scope__
+    Enum.reduce(scope, target, fn(scope, acc) ->
+      Map.put(acc, scope, Map.fetch!(source, scope))
+    end)
+  end
+
+  @spec scope(any) :: Map.t
+  def scope(%{__struct__: struct} = target) do
+    assert_as_nested_set(struct)
+    scope = struct.__as_nested_set_scope__
+    Enum.reduce(scope, %{}, fn scope, acc ->
+      Map.put(acc, scope, Map.fetch!(target, scope))
+    end)
+  end
+
+  defp do_scoped_query(query, target, scopes) do
     Enum.reduce(scopes, query, fn(scope, acc) ->
       from(p in acc,
         where: field(p, ^scope) == ^Map.fetch!(target, scope))
     end)
   end
 
-  @spec do_same_scope?(any, any, atom) :: boolean
-  def do_same_scope?(source, target, scope) do
+  defp do_same_scope?(source, target) do
+    scope = source.__as_nested_set_scope__
     Enum.all?(scope, fn field ->
       Map.get(source, field) == Map.get(target, field)
     end)
+  end
+
+  defp assert_as_nested_set(module) do
+    if !AsNestedSet.defined?(module) do
+      raise ArgumentError, "the module #{inspect module} specified in query doesn't defined as AsNestedSet''"
+    end
   end
 end

@@ -1,7 +1,7 @@
 defmodule AsNestedSet.Taxon do
   use Ecto.Schema
   import Ecto.Changeset
-  use AsNestedSet, repo: AsNestedSet.TestRepo, scope: [:taxonomy_id]
+  use AsNestedSet, scope: [:taxonomy_id]
 
   schema "taxons" do
 
