@@ -134,5 +134,13 @@ AsNestedSet.self_and_siblings(target) |> AsNestedSet.execute(TestRepo)
 
 Traverse the tree
 ```elixir
+# traverse a tree with 3 args post callback
+AsNestedSet.traverse(Taxon, %{taxonomy_id}, context, fn node, context -> {node, context}, end, fn node, children, context -> {node, context} end) |> AsNestedSet.execute(TestRepo)
+# traverse a tree with 2 args post callback
+AsNestedSet.traverse(Taxon, %{taxonomy_id}, context, fn node, context -> {node, context}, end, fn node, context -> {node, context} end) |> AsNestedSet.execute(TestRepo)
 
+# traverse a subtree with 3 args post callback
+AsNestedSet.traverse(target, context, fn node, context -> {node, context}, end, fn node, children, context -> {node, context} end) |> AsNestedSet.execute(TestRepo)
+# traverse a tree with 2 args post callback
+AsNestedSet.traverse(target, context, fn node, context -> {node, context}, end, fn node, context -> {node, context} end) |> AsNestedSet.execute(TestRepo)
 ```
