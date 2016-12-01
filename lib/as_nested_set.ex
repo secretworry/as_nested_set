@@ -45,4 +45,7 @@ defmodule AsNestedSet do
   defdelegate dump(module, scope, parent_id), to: AsNestedSet.Queriable
   defdelegate dump_one(module, scope), to: AsNestedSet.Queriable
   defdelegate right_most(module, scope), to: AsNestedSet.Queriable
+
+  defdelegate traverse(module, scope, context, pre, post), to: AsNestedSet.Traversable
+  defdelegate traverse(node, context, pre, post), to: AsNestedSet.Traversable
 end

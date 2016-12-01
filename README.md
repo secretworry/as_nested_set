@@ -131,3 +131,8 @@ AsNestedSet.ancestors(target) |> AsNestedSet.execute(TestRepo)
 AsNestedSet.self_and_siblings(target) |> AsNestedSet.execute(TestRepo)
 
 ```
+
+Traverse the tree
+```elixir
+
+```
