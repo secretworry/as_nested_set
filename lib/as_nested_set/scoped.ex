@@ -2,6 +2,8 @@ defmodule AsNestedSet.Scoped do
 
   import Ecto.Query
 
+  @type scope :: [atom]
+
   defmacro __using__(args) do
     quote do
       @scope unquote(Keyword.get(args, :scope, []))
