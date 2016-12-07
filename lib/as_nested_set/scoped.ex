@@ -24,10 +24,10 @@ defmodule AsNestedSet.Scoped do
     && do_same_scope?(source, target)
   end
 
-  @spec scoped_query(Ecto.Query.t, AsNestedSet.t) :: Ecto.Query.t
-  def scoped_query(query, target) do
+  @spec scoped_query(Ecto.Query.t, Map.t) :: Ecto.Query.t
+  def scoped_query(query, scope) do
     {_, module} = query.from
-    do_scoped_query(query, target, module.__as_nested_set_scope__())
+    do_scoped_query(query, scope, module.__as_nested_set_scope__())
   end
 
   @spec assign_scope_from(any, any) :: any
@@ -50,10 +50,9 @@ defmodule AsNestedSet.Scoped do
     module.__as_nested_set_scope__
   end
 
-  defp do_scoped_query(query, target, scopes) do
-    Enum.reduce(scopes, query, fn(scope, acc) ->
-      from(p in acc,
-        where: field(p, ^scope) == ^Map.fetch!(target, scope))
+  defp do_scoped_query(query, scope, scope_fields) do
+    Enum.reduce(scope_fields, query, fn(scope_field, acc) ->
+      query |> where([p], field(p, ^scope_field) == ^Map.fetch!(scope, scope_field))
     end)
   end
 
