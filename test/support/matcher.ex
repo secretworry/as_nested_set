@@ -17,7 +17,13 @@ defmodule AsNestedSet.Matcher do
     lft = source.lft
     rgt = source.rgt
     taxonomy_id = source.taxonomy_id
-    %{:name => ^name, :lft => ^lft, :rgt => ^rgt, :taxonomy_id => ^taxonomy_id} = target
+    try do
+      %{:name => ^name, :lft => ^lft, :rgt => ^rgt, :taxonomy_id => ^taxonomy_id} = target
+    rescue
+      _x in [MatchError] ->
+        expected = %{:name => name, :lft => lft, :rgt => rgt, :taxonomy_id => taxonomy_id}
+        raise "Expected #{inspect expected} but got #{inspect target}"
+    end
     true
   end
 end

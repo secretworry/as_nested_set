@@ -170,4 +170,63 @@ defmodule AsNestedSet.ModifiableTest do
       ]}
     )
   end
+
+  test "move(node, :root) should move node to root" do
+    {_, [_, {_, [{n010, _} | _]}]} = create_tree(1)
+    move(n010, :root) |> execute
+    assert match(dump(Taxon, %{taxonomy_id: 1}) |> execute,
+      [
+        {%{name: "n0", lft: 0, rgt: 7, taxonomy_id: 1}, [
+          {%{ name: "n00", lft: 1, rgt: 2, taxonomy_id: 1}, []},
+          {%{ name: "n01", lft: 3, rgt: 6, taxonomy_id: 1}, [
+            {%{ name: "n011", lft: 4, rgt: 5, taxonomy_id: 1}, []}
+          ]}
+        ]},
+        {%{ name: "n010", lft: 8, rgt: 9, taxonomy_id: 1}, []}
+      ]
+    )
+  end
+
+  test "move(node, target, :child) should move given node to the child of target" do
+    {_, [{n00, _}, {n01, _}]} = create_tree(1)
+    move(n01, n00, :child) |> execute
+    assert match(dump_one(Taxon, %{taxonomy_id: 1}) |> execute,
+      {%{name: "n0", lft: 0, rgt: 9, taxonomy_id: 1}, [
+        {%{ name: "n00", lft: 1, rgt: 8, taxonomy_id: 1}, [
+          {%{ name: "n01", lft: 2, rgt: 7, taxonomy_id: 1}, [
+            {%{ name: "n010", lft: 3, rgt: 4, taxonomy_id: 1}, []},
+            {%{ name: "n011", lft: 5, rgt: 6, taxonomy_id: 1}, []}
+          ]}
+        ]}
+      ]}
+    )
+  end
+
+  test "move(node, target, :left) should move given node to the left of target" do
+    {_, [{n00, _}, {n01, _}]} = create_tree(1)
+    move(n01, n00, :left) |> execute
+    assert match(dump_one(Taxon, %{taxonomy_id: 1}) |> execute,
+      {%{name: "n0", lft: 0, rgt: 9, taxonomy_id: 1}, [
+        {%{ name: "n01", lft: 1, rgt: 6, taxonomy_id: 1}, [
+          {%{ name: "n010", lft: 2, rgt: 3, taxonomy_id: 1}, []},
+          {%{ name: "n011", lft: 4, rgt: 5, taxonomy_id: 1}, []}
+        ]},
+        {%{ name: "n00", lft: 7, rgt: 8, taxonomy_id: 1}, []}
+      ]}
+    )
+  end
+
+  test "move(node, target, :right) should move given node to the right of target" do
+    {_, [{n00, _}, {n01, _}]} = create_tree(1)
+    move(n00, n01, :right) |> execute
+    assert match(dump_one(Taxon, %{taxonomy_id: 1}) |> execute,
+      {%{name: "n0", lft: 0, rgt: 9, taxonomy_id: 1}, [
+        {%{ name: "n01", lft: 1, rgt: 6, taxonomy_id: 1}, [
+          {%{ name: "n010", lft: 2, rgt: 3, taxonomy_id: 1}, []},
+          {%{ name: "n011", lft: 4, rgt: 5, taxonomy_id: 1}, []}
+        ]},
+        {%{ name: "n00", lft: 7, rgt: 8, taxonomy_id: 1}, []}
+      ]}
+    )
+  end
 end

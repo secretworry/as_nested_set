@@ -232,5 +232,96 @@ defmodule AsNestedSet.Modifiable do
     end
   end
 
+  def move(%{__struct__: _} = model, target \\ nil, position) when is_atom(position) do
+    fn repo ->
+      model = do_reload(repo, model)
+      case validate_move(model, target, position) do
+        :ok -> do_safe_move(repo, model, do_reload(repo, target), position)
+        error -> error
+      end
+    end
+  end
 
+  defp validate_move(model, target, position) do
+    cond do
+      target == nil && position != :root -> {:error, :target_is_required}
+      position == :parent -> {:error, :cannot_move_to_parent}
+      target != nil && get_field(model, :left) < get_field(target, :left) && get_field(model, :right) > get_field(target, :right) -> {:error, :within_the_same_tree}
+      position != :root && !AsNestedSet.Scoped.same_scope?(target, model) -> {:error, :not_the_same_scope}
+      true -> :ok
+    end
+  end
+
+  defp do_safe_move(repo, model, target, position) do
+    if target != nil && get_field(model, :node_id) == get_field(target, :node_id) do
+      model
+    else
+      target_bound = target_bound(repo, model, target, position)
+      left = get_field(model, :left)
+      right = get_field(model, :right)
+      {bound, other_bound} = get_bounaries(model, target_bound)
+      do_switch(repo, model, {left, right, bound, other_bound}, new_parent_id(target, position))
+    end
+  end
+
+  def target_bound(repo, model, target, position) do
+    case position do
+      :child -> get_field(target, :right)
+      :left -> get_field(target, :left)
+      :right -> get_field(target, :right) + 1
+      :root -> AsNestedSet.right_most(model).(repo) + 1
+    end
+  end
+
+  def get_bounaries(model, target_bound) do
+    left = get_field(model, :left)
+    right = get_field(model, :right)
+    if target_bound > right do
+      {right + 1, target_bound - 1}
+    else
+      {target_bound, left - 1}
+    end
+  end
+
+  defp new_parent_id(target, position) do
+    case position do
+      :child -> get_field(target, :node_id)
+      :left -> get_field(target, :parent_id)
+      :right -> get_field(target, :parent_id)
+      :root -> nil
+    end
+  end
+
+  defp do_switch(repo, %{__struct__: struct} = model, boundaries, new_parent_id) do
+    # As we checked the boundaries, the two interval is non-overlapping
+    [a, b, c, d]= boundaries |> Tuple.to_list |> Enum.sort
+    node_id = get_field(model, :node_id)
+    node_id_column = get_column_name(model, :node_id)
+    parent_id_column = get_column_name(model, :parent_id)
+    # shift the left part to the temporary position (negative space)
+    do_shift(repo, model, {a, b}, -b - 1)
+    do_shift(repo, model, {c, d}, a - c)
+    do_shift(repo, model, {a - b - 1, -1}, d + 1)
+    from(n in struct, where: field(n, ^node_id_column) == ^node_id, update: [set: ^[{parent_id_column, new_parent_id}]])
+    |> AsNestedSet.Scoped.scoped_query(model)
+    |> repo.update_all([])
+    do_reload(repo, model)
+  end
+
+  defp do_shift(repo, %{__struct__: struct} = model, {left, right}, delta) do
+    left_column = get_column_name(model, :left)
+    right_column = get_column_name(model, :right)
+    from(struct)
+    |> where([n], field(n, ^left_column) >= ^left and field(n, ^left_column) <= ^right)
+    |> update([n], [inc: ^[{left_column, delta}]])
+    |> AsNestedSet.Scoped.scoped_query(model)
+    |> repo.update_all([])
+
+    from(struct)
+    |> where([n], field(n, ^right_column) >= ^left and field(n, ^right_column) <= ^right)
+    |> update([n], [inc: ^[{right_column, delta}]])
+    |> AsNestedSet.Scoped.scoped_query(model)
+    |> repo.update_all([])
+
+  end
 end
