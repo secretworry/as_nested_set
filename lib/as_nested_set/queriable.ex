@@ -150,7 +150,7 @@ defmodule AsNestedSet.Queriable do
   end
 
 
-  def right_most(module, scope) do
+  def right_most(module, scope) when is_atom(module) do
     fn repo ->
       right_column = get_column_name(module, :right)
       from(q in module,
@@ -158,6 +158,12 @@ defmodule AsNestedSet.Queriable do
       )
       |> AsNestedSet.Scoped.scoped_query(scope)
       |> repo.one!
+    end
+  end
+
+  def right_most(%{__struct__: struct} = target) do
+    fn repo ->
+      right_most(struct, target).(repo)
     end
   end
 end

@@ -46,9 +46,14 @@ defmodule AsNestedSet.QueriableTest do
     AsNestedSet.execute(executable, Repo)
   end
 
-  test "right_most/2 works find" do
+  test "right_most/2 works fine" do
     create_tree(1)
     assert right_most(Taxon, %{taxonomy_id: 1}) |> execute() == 9
+  end
+
+  test "right_most/1 works fine" do
+    {node, _} = create_tree(1)
+    assert right_most(node) |> execute() == 9
   end
 
   test "children/1 should get all children in the right sequence" do
