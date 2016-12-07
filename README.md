@@ -97,6 +97,14 @@ target = Repo.find!(Taxon, 1)
 
 # add as root
 %Taxon{name: "root", taxonomy_id: 1} |> AsNestedSet.create(:root) |> AsNestedSet.execute(TestRepo)
+
+# move a node to a new position
+
+node |> AsNestedSet.move(:root) |> AsNestedSet.execute(TestRepo)
+node |> AsNestedSet.move(target, :left) |> AsNestedSet.execute(TestRepo)
+node |> AsNestedSet.move(target, :right) |> AsNestedSet.execute(TestRepo)
+node |> AsNestedSet.move(target, :child) |> AsNestedSet.execute(TestRepo)
+
 ```
 
 Remove a specified node and all its descendants
