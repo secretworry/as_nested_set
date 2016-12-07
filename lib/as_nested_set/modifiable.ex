@@ -232,6 +232,8 @@ defmodule AsNestedSet.Modifiable do
     end
   end
 
+  @spec move(AsNestedSet.t, AsNestedSet.t, position) :: AsNestedSet.executable
+  @spec move(AsNestedSet.t, :root) :: AsNestedSet.executable
   def move(%{__struct__: _} = model, target \\ nil, position) when is_atom(position) do
     fn repo ->
       model = do_reload(repo, model)

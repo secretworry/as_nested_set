@@ -32,6 +32,8 @@ defmodule AsNestedSet do
   defdelegate create(new_model, target, position), to: AsNestedSet.Modifiable
   defdelegate reload(model), to: AsNestedSet.Modifiable
   defdelegate delete(model), to: AsNestedSet.Modifiable
+  defdelegate move(model, target, position), to: AsNestedSet.Modifiable
+  defdelegate move(model, position), to: AsNestedSet.Modifiable
 
   defdelegate self_and_siblings(target), to: AsNestedSet.Queriable
   defdelegate ancestors(target), to: AsNestedSet.Queriable
