@@ -2,7 +2,6 @@ defmodule AsNestedSet.TraversableTest do
 
   use AsNestedSet.EctoCase
   import AsNestedSet.Factory
-  import AsNestedSet.Matcher
 
   import AsNestedSet.Traversable
 

@@ -229,4 +229,48 @@ defmodule AsNestedSet.ModifiableTest do
       ]}
     )
   end
+
+  test "move(root_node, :root) should execute without error" do
+    {n0, _} = create_tree(1)
+    move(n0, :root) |> execute
+    assert match(dump_one(Taxon, %{taxonomy_id: 1}) |> execute,
+      {%{name: "n0", lft: 0, rgt: 9, taxonomy_id: 1}, [
+        {%{ name: "n00", lft: 1, rgt: 2, taxonomy_id: 1}, []},
+        {%{ name: "n01", lft: 3, rgt: 8, taxonomy_id: 1}, [
+          {%{ name: "n010", lft: 4, rgt: 5, taxonomy_id: 1}, []},
+          {%{ name: "n011", lft: 6, rgt: 7, taxonomy_id: 1}, []}
+        ]}
+      ]}
+    )
+  end
+
+  test "move(child_node, parent_node, :child) should move given child to the end of children of parent" do
+    {n0, [{n00, _}, _]} = create_tree(1)
+
+    move(n00, n0, :child) |> execute
+    assert match(dump_one(Taxon, %{taxonomy_id: 1}) |> execute,
+      {%{name: "n0", lft: 0, rgt: 9, taxonomy_id: 1}, [
+        {%{ name: "n01", lft: 1, rgt: 6, taxonomy_id: 1}, [
+          {%{ name: "n010", lft: 2, rgt: 3, taxonomy_id: 1}, []},
+          {%{ name: "n011", lft: 4, rgt: 5, taxonomy_id: 1}, []}
+        ]},
+        {%{ name: "n00", lft: 7, rgt: 8, taxonomy_id: 1}, []}
+      ]}
+    )
+  end
+
+  test "move(last_child_node, parent_node, :child) should do nothing" do
+    {n0, [_, {n01, _}]} = create_tree(1)
+
+    move(n01, n0, :child) |> execute
+    assert match(dump_one(Taxon, %{taxonomy_id: 1}) |> execute,
+      {%{name: "n0", lft: 0, rgt: 9, taxonomy_id: 1}, [
+        {%{ name: "n00", lft: 1, rgt: 2, taxonomy_id: 1}, []},
+        {%{ name: "n01", lft: 3, rgt: 8, taxonomy_id: 1}, [
+          {%{ name: "n010", lft: 4, rgt: 5, taxonomy_id: 1}, []},
+          {%{ name: "n011", lft: 6, rgt: 7, taxonomy_id: 1}, []}
+        ]}
+      ]}
+    )
+  end
 end

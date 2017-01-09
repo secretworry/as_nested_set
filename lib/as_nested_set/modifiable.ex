@@ -248,7 +248,7 @@ defmodule AsNestedSet.Modifiable do
     cond do
       target == nil && position != :root -> {:error, :target_is_required}
       position == :parent -> {:error, :cannot_move_to_parent}
-      target != nil && get_field(model, :left) < get_field(target, :left) && get_field(model, :right) > get_field(target, :right) -> {:error, :within_the_same_tree}
+      target != nil && get_field(model, :left) <= get_field(target, :left) && get_field(model, :right) >= get_field(target, :right) -> {:error, :within_the_same_tree}
       position != :root && !AsNestedSet.Scoped.same_scope?(target, model) -> {:error, :not_the_same_scope}
       true -> :ok
     end
@@ -261,8 +261,12 @@ defmodule AsNestedSet.Modifiable do
       target_bound = target_bound(repo, model, target, position)
       left = get_field(model, :left)
       right = get_field(model, :right)
-      {bound, other_bound} = get_bounaries(model, target_bound)
-      do_switch(repo, model, {left, right, bound, other_bound}, new_parent_id(target, position))
+      case get_bounaries(model, target_bound) do
+        {bound, other_bound} ->
+          do_switch(repo, model, {left, right, bound, other_bound}, new_parent_id(target, position))
+        :no_operation ->
+          model
+      end
     end
   end
 
@@ -278,10 +282,13 @@ defmodule AsNestedSet.Modifiable do
   def get_bounaries(model, target_bound) do
     left = get_field(model, :left)
     right = get_field(model, :right)
-    if target_bound > right do
-      {right + 1, target_bound - 1}
-    else
-      {target_bound, left - 1}
+    cond do
+      target_bound - 1 >= right + 1 ->
+        {right + 1, target_bound - 1}
+      target_bound <= left - 1 ->
+        {target_bound, left - 1}
+      true ->
+        :no_operation
     end
   end
 
