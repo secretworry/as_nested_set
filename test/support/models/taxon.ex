@@ -11,7 +11,7 @@ defmodule AsNestedSet.Taxon do
     field :lft, :integer
     field :rgt, :integer
 
-    timestamps
+    timestamps()
   end
 
   @required_fields ~w(name taxonomy_id lft rgt)
