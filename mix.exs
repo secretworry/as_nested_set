@@ -22,7 +22,7 @@ defmodule AsNestedSet.Mixfile do
   defp package do
     [
       name: :as_nested_set,
-      files: ["lib", "priv", "mix.exs", "README*", "LICENSE*"],
+      files: ["lib", "priv", "mix.exs", "README*", "LICENSE*", "CHANGELOG*"],
       maintainers: ["dusiyh@gmail.com"],
       licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/secretworry/as_nested_set"}
