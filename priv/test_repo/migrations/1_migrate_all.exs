@@ -9,7 +9,7 @@ defmodule AsNestedSet.TestRepo.Migrations.MigrateAll do
       add :lft, :integer
       add :rgt, :integer
 
-      timestamps
+      timestamps()
     end
 
   end

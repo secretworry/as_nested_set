@@ -11,7 +11,7 @@ defmodule AsNestedSet.Taxon do
     field :lft, :integer
     field :rgt, :integer
 
-    timestamps
+    timestamps()
   end
 
   @required_fields ~w(name taxonomy_id lft rgt)
@@ -26,6 +26,6 @@ defmodule AsNestedSet.Taxon do
   """
   def changeset(model, params \\ :empty) do
     model
-    |> cast(params, @required_fields, @optional_fields)
+    |> cast(params, @required_fields ++ @optional_fields)
   end
 end
