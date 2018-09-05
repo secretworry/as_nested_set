@@ -1,5 +1,12 @@
+# Temporaray files
 /_build
 /cover
 /deps
 erl_crash.dump
 *.ez
+
+# IntelliJ configuration files
+/.idea
+
+# Auto-generated files
+/doc
