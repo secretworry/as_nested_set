@@ -76,7 +76,7 @@ defmodule AsNestedSet.Taxon do
 end
 ```
 
-  * `scope`: (required) a list of column names which restrict what is to be considered within the same tree(same scope).
+  * `scope`: (optional) a list of column names which restrict what is to be considered within the same tree(same scope). When ignored, all the nodes will be considered under the same tree.
 
 ## Model Operations
 
