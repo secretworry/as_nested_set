@@ -100,10 +100,10 @@ target = Repo.find!(Taxon, 1)
 
 # move a node to a new position
 
-node |> AsNestedSet.move(:root) |> AsNestedSet.execute(TestRepo)
-node |> AsNestedSet.move(target, :left) |> AsNestedSet.execute(TestRepo)
-node |> AsNestedSet.move(target, :right) |> AsNestedSet.execute(TestRepo)
-node |> AsNestedSet.move(target, :child) |> AsNestedSet.execute(TestRepo)
+node |> AsNestedSet.move(:root) |> AsNestedSet.execute(TestRepo) // move the node to be a new root
+node |> AsNestedSet.move(target, :left) |> AsNestedSet.execute(TestRepo) // move the node to the left of the target
+node |> AsNestedSet.move(target, :right) |> AsNestedSet.execute(TestRepo) // move the node to the right of the target
+node |> AsNestedSet.move(target, :child) |> AsNestedSet.execute(TestRepo) // move the node to be the right-most child of target
 
 ```
 
@@ -152,3 +152,13 @@ AsNestedSet.traverse(target, context, fn node, context -> {node, context}, end, 
 # traverse a tree with 2 args post callback
 AsNestedSet.traverse(target, context, fn node, context -> {node, context}, end, fn node, context -> {node, context} end) |> AsNestedSet.execute(TestRepo)
 ```
+
+## FAQ
+
+1. How to move a node to be the n-th child of a target
+
+  Be default, after using `AsNestedSet.move(node, target, :child)`, you move the `node` to be the right-most child of the `target`, because we can know the `left` and `right` of the target right way, but to find out the proper `right` and `left` for n-th child requires more operations.
+
+  To achieve the goal, you should
+  1. Query the n-th child or (n-1)th child of the target by `AsNestedSet.children(target)`,
+  2. Use `move(node, n_th_child, :left)` and `move(node, n_1_th_child, :right)` respectively.
