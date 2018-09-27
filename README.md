@@ -153,12 +153,12 @@ AsNestedSet.traverse(target, context, fn node, context -> {node, context}, end, 
 AsNestedSet.traverse(target, context, fn node, context -> {node, context}, end, fn node, context -> {node, context} end) |> AsNestedSet.execute(TestRepo)
 ```
 
-## FAQ
+# FAQ
 
-1. How to move a node to be the n-th child of a target
+## How to move a node to be the n-th child of a target
 
-  Be default, after using `AsNestedSet.move(node, target, :child)`, you move the `node` to be the right-most child of the `target`, because we can know the `left` and `right` of the target right way, but to find out the proper `right` and `left` for n-th child requires more operations.
+Be default, after using `AsNestedSet.move(node, target, :child)`, you move the `node` to be the right-most child of the `target`, because we can know the `left` and `right` of the target right way, but to find out the proper `right` and `left` for n-th child requires more operations.
 
-  To achieve the goal, you should
+To achieve the goal, you should:
   1. Query the n-th child or (n-1)th child of the target by `AsNestedSet.children(target)`,
   2. Use `move(node, n_th_child, :left)` and `move(node, n_1_th_child, :right)` respectively.
