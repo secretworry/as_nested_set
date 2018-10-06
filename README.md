@@ -8,7 +8,7 @@ Add as_nested_set to your list of dependencies in `mix.exs`:
 
       # use the stable version
       def deps do
-        [{:as_nested_set, "~> 3.1", app: false}]
+        [{:as_nested_set, "~> 3.1"}]
       end
 
       # use the latest version
