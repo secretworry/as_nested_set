@@ -163,6 +163,16 @@ To achieve the goal, you should:
   1. Query the n-th child or (n-1)th child of the target by `AsNestedSet.children(target)`,
   2. Use `move(node, n_th_child, :left)` and `move(node, n_1_th_child, :right)` respectively.
 
-## Special thanks
+## Ecto 3.0
+
+Ecto is upgrading to 3.x. If you are using Ecto 3.x, please use branch `ecto-3.0` (Thanks for [@nicholasjhenry](https://github.com/nicholasjhenry))
+
+# Contributors
+
+* [@SagarKarwande](https://github.com/SagarKarwande)
+* [@oyeb](https://github.com/oyeb)
+* [@nicholasjhenry](https://github.com/nicholasjhenry)
+
+# Special thanks
 
 * Thanks [Travis CI](https://travis-ci.com/) for providing free and convenient integration test
