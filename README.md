@@ -1,5 +1,9 @@
 # as_nested_set
 
+[![Build Status](https://travis-ci.com/secretworry/as_nested_set.svg?branch=master)](https://travis-ci.org/secretworry/as_nested_set)
+[![Coveralls Coverage](https://img.shields.io/coveralls/secretworry/as_nested_set.svg)](https://coveralls.io/github/secretworry/as_nested_set)
+[![Hex.pm](https://img.shields.io/hexpm/v/as_nested_set.svg)](http://hex.pm/packages/as_nested_set)
+
 **An [ecto](https://github.com/elixir-lang/ecto) based [Nested set model](https://en.wikipedia.org/wiki/Nested_set_model) implementation for database**
 
 ## Installation
