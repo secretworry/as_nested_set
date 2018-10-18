@@ -162,3 +162,7 @@ Be default, after using `AsNestedSet.move(node, target, :child)`, you move the `
 To achieve the goal, you should:
   1. Query the n-th child or (n-1)th child of the target by `AsNestedSet.children(target)`,
   2. Use `move(node, n_th_child, :left)` and `move(node, n_1_th_child, :right)` respectively.
+
+## Special thanks
+
+* Thanks [Travis CI](https://travis-ci.com/) for providing free and convenient integration test
