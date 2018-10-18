@@ -1,0 +1,8 @@
+language: elixir
+elixir: '1.7.3'
+otp_release: '21.0.9'
+services:
+  - postgresql
+before_script:
+  - psql -c 'create database travis_ci_test;' -U postgres
+  - cp config/test.exs.travis config/test.exs
