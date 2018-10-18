@@ -273,4 +273,24 @@ defmodule AsNestedSet.ModifiableTest do
       ]}
     )
   end
+  
+  test "move to the same node should do nothing" do
+    {n0, _} = create_tree(1)
+    move(n0, n0, :child) |> execute
+    assert match(dump_one(Taxon, %{taxonomy_id: 1}) |> execute,
+       {%{name: "n0", lft: 0, rgt: 9, taxonomy_id: 1}, [
+         {%{ name: "n00", lft: 1, rgt: 2, taxonomy_id: 1}, []},
+         {%{ name: "n01", lft: 3, rgt: 8, taxonomy_id: 1}, [
+           {%{ name: "n010", lft: 4, rgt: 5, taxonomy_id: 1}, []},
+           {%{ name: "n011", lft: 6, rgt: 7, taxonomy_id: 1}, []}
+         ]}
+       ]}
+     )
+  end
+  
+  test "move node across different scope should be refused" do
+    {_, [_, {n01, _}]} = create_tree(1)
+    {_, [_, {m01, _}]} = create_tree(2)
+    assert {:error, :within_the_same_tree} = move(m01, n01, :child) |> execute
+  end
 end
