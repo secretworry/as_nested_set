@@ -1,5 +1,9 @@
 # as_nested_set
 
+[![Build Status](https://travis-ci.com/secretworry/as_nested_set.svg?branch=master)](https://travis-ci.org/secretworry/as_nested_set)
+[![Coveralls Coverage](https://img.shields.io/coveralls/secretworry/as_nested_set.svg)](https://coveralls.io/github/secretworry/as_nested_set)
+[![Hex.pm](https://img.shields.io/hexpm/v/as_nested_set.svg)](http://hex.pm/packages/as_nested_set)
+
 **An [ecto](https://github.com/elixir-lang/ecto) based [Nested set model](https://en.wikipedia.org/wiki/Nested_set_model) implementation for database**
 
 ## Installation
@@ -163,6 +167,16 @@ To achieve the goal, you should:
   1. Query the n-th child or (n-1)th child of the target by `AsNestedSet.children(target)`,
   2. Use `move(node, n_th_child, :left)` and `move(node, n_1_th_child, :right)` respectively.
 
-## Special thanks
+## Ecto 3.0
+
+Ecto is upgrading to 3.x. If you are using Ecto 3.x, please use branch `ecto-3.0` (Thanks for [@nicholasjhenry](https://github.com/nicholasjhenry))
+
+# Contributors
+
+* [@SagarKarwande](https://github.com/SagarKarwande)
+* [@oyeb](https://github.com/oyeb)
+* [@nicholasjhenry](https://github.com/nicholasjhenry)
+
+# Special thanks
 
 * Thanks [Travis CI](https://travis-ci.com/) for providing free and convenient integration test

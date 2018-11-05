@@ -15,6 +15,10 @@ defmodule AsNestedSetTest do
     @right_column :right
     defstruct node_id: "node_id", left: "left", right: "right", pid: "parent_id"
   end
+  
+  defmodule Undefined do
+    defstruct id: "id"
+  end
 
   @fields ~w{node_id left right parent_id}a
 
@@ -59,5 +63,16 @@ defmodule AsNestedSetTest do
 
     assert Redefined.child?(%Redefined{pid: "parent_id"})
     refute Redefined.child?(%Redefined{pid: nil})
+  end
+  
+  describe "AsNestedSet.defined?/1" do
+    test "should return true for a struct defined AsNestedSet" do
+      assert AsNestedSet.defined?(Sample)
+      assert AsNestedSet.defined?(%Sample{})
+    end
+    test "should return false for a module defined AsNestedSet" do
+      refute AsNestedSet.defined?(Undefined)
+      refute AsNestedSet.defined?(%Undefined{})
+    end
   end
 end

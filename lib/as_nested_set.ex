@@ -12,7 +12,7 @@ defmodule AsNestedSet do
   @type executable :: (Ecto.Repo.t -> any)
 
   @spec defined?(struct) :: boolean
-  def defined?(%{__struct__: struct}) do
+  def defined?(struct) when is_atom(struct) do
     try do
       struct.__as_nested_set_fields__()
       true
@@ -21,9 +21,12 @@ defmodule AsNestedSet do
         false
     end
   end
+  def defined?(%{__struct__: struct}) do
+    defined?(struct)
+  end
   def defined?(_), do: false
 
-  @spec execute((Ecto.Repo.t -> any), Ecto.Repo.t) :: any
+  @spec execute(executable, Ecto.Repo.t) :: any
   def execute(call, repo) do
     call.(repo)
   end

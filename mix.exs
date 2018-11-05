@@ -10,7 +10,10 @@ defmodule AsNestedSet.Mixfile do
      package: package(),
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps()]
+     deps: deps(),
+     test_coverage: [tool: ExCoveralls],
+     preferred_cli_env: [coveralls: :test, "coveralls.detail": :test, "coveralls.post": :test, "coveralls.html": :test, "coveralls.travis": :test]
+     ]
   end
 
   defp description do
@@ -43,7 +46,8 @@ defmodule AsNestedSet.Mixfile do
       {:ecto_sql, "~> 3.0.0"},
       {:ex_doc, ">= 0.18.3", only: :dev},
       {:postgrex, "~> 0.14.0", only: :test},
-      {:ex_machina, "~> 2.2", only: [:test]}
+      {:ex_machina, "~> 2.2", only: [:test]},
+      {:excoveralls, "~> 0.10", only: [:test]}
     ]
   end
 

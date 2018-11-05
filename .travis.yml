@@ -6,3 +6,5 @@ services:
 before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
   - cp config/test.exs.travis config/test.exs
+script:
+  - mix coveralls.travis
