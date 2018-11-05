@@ -1,6 +1,6 @@
 # as_nested_set
 
-[![Build Status](https://travis-ci.com/secretworry/as_nested_set.svg?branch=master)](https://travis-ci.org/secretworry/as_nested_set)
+[![Build Status](https://travis-ci.com/secretworry/as_nested_set.svg?branch=ecto-3.0)](https://travis-ci.org/secretworry/as_nested_set)
 [![Coveralls Coverage](https://img.shields.io/coveralls/secretworry/as_nested_set.svg)](https://coveralls.io/github/secretworry/as_nested_set)
 [![Hex.pm](https://img.shields.io/hexpm/v/as_nested_set.svg)](http://hex.pm/packages/as_nested_set)
 
@@ -10,14 +10,9 @@
 
 Add as_nested_set to your list of dependencies in `mix.exs`:
 
-      # use the stable version
+      # use the ecto-3 version
       def deps do
-        [{:as_nested_set, "~> 3.1"}]
-      end
-
-      # use the latest version
-      def deps do
-        [{:as_nested_set, github: "https://github.com/secretworry/as_nested_set.git"}]
+        [{:as_nested_set, github: "https://github.com/secretworry/as_nested_set.git", branch: "ecto-3.0"}]
       end
 
 ## Usage
