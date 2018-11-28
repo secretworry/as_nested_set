@@ -159,6 +159,31 @@ AsNestedSet.traverse(target, context, fn node, context -> {node, context}, end, 
 
 # FAQ
 
+## How to ensure the consistency
+
+*We recommend users to use a transaction to wrap all the operations in the production environment*
+
+We introduced the `@type executable`( a delayed execution ) as return value of each API, so using transaction or not and how granular the transaction should be are up to users.
+
+In general, almost all modifications of a nested set can be done in one sql, but we can't express some of them using ecto's DSL( ecto doesn't support `case-when` in update query ), so users having multiple modifiers *must* wrap `AsNestedSet.execute(call, repo)` in a Transaction, for example
+
+```elixir
+exec = node |> AsNestedSet.move(:root)
+Repo.transaction fn -> AsNestedSet.execute(exec, Repo) end
+```
+
+Although, the `node` passed in as arguments might have changed after loaded from db, we ensure before using it we will reload it from DB, so here is no need to wrap `load` and `execute` in the same transaction
+
+```elixir
+# This is not necessary
+Repo.transaction fn ->
+	node = loadNode()
+	node |> AsNestedSet.move(:root) |> AsNestedSet.execute(Repo) # We will reload the node passed in
+end
+```
+
+But if you want to ensure consistency across multiple `execute` , to avoid the racing condition, you have to wrap all them in a transaction.
+
 ## How to move a node to be the n-th child of a target
 
 Be default, after using `AsNestedSet.move(node, target, :child)`, you move the `node` to be the right-most child of the `target`, because we can know the `left` and `right` of the target right way, but to find out the proper `right` and `left` for n-th child requires more operations.
