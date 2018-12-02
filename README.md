@@ -163,16 +163,16 @@ AsNestedSet.traverse(target, context, fn node, context -> {node, context}, end, 
 
 *We recommend users to use a transaction to wrap all the operations in the production environment*
 
-We introduced the `@type executable`( a delayed execution ) as return value of each API, so using transaction or not and how granular the transaction should be are up to users.
+We introduced the `@type executable`( a delayed execution ) as return value of each API, so using transaction or not and how granular the transaction should be are all up to users.
 
-In general, almost all modifications of a nested set can be done in one sql, but we can't express some of them using ecto's DSL( ecto doesn't support `case-when` in update query ), so users having multiple modifiers *must* wrap `AsNestedSet.execute(call, repo)` in a Transaction, for example
+In general, almost all modifications of a nested set can be done in one SQL, but we can't express some of them using ecto's DSL( ecto doesn't support `case-when` in update query ), so users having concurrent modifications *must* wrap `AsNestedSet.execute(call, repo)` in a Transaction, for example
 
 ```elixir
 exec = node |> AsNestedSet.move(:root)
 Repo.transaction fn -> AsNestedSet.execute(exec, Repo) end
 ```
 
-Although, the `node` passed in as arguments might have changed after loaded from db, we ensure before using it we will reload it from DB, so here is no need to wrap `load` and `execute` in the same transaction
+The `node` passed in as an argument might has changed after loaded from db, we will reload it from DB before use it, so there is no need to wrap the `load` and the `execute` in the same transaction
 
 ```elixir
 # This is not necessary
@@ -182,7 +182,7 @@ Repo.transaction fn ->
 end
 ```
 
-But if you want to ensure consistency across multiple `execute` , to avoid the racing condition, you have to wrap all them in a transaction.
+But if you want to ensure consistency across multiple `execute`s , to avoid the racing condition, you have to isolate them by wrap them in different transaction.
 
 ## How to move a node to be the n-th child of a target
 
