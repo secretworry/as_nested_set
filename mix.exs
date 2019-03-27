@@ -42,7 +42,7 @@ defmodule AsNestedSet.Mixfile do
 
   defp deps do
     [
-      {:ecto, "~> 3.0.7", override: true},
+      {:ecto, "~> 3.0.7"},
       {:ecto_sql, "~> 3.0.5"},
       {:ex_doc, ">= 0.18.3", only: :dev},
       {:postgrex, "~> 0.14.1", only: :test},
