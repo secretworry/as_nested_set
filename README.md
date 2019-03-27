@@ -1,6 +1,6 @@
 # as_nested_set
 
-[![Build Status](https://travis-ci.com/secretworry/as_nested_set.svg?branch=master)](https://travis-ci.org/secretworry/as_nested_set)
+[![Build Status](https://travis-ci.com/secretworry/as_nested_set.svg?branch=ecto-2.x)](https://travis-ci.org/secretworry/as_nested_set)
 [![Coveralls Coverage](https://img.shields.io/coveralls/secretworry/as_nested_set.svg)](https://coveralls.io/github/secretworry/as_nested_set)
 [![Hex.pm](https://img.shields.io/hexpm/v/as_nested_set.svg)](http://hex.pm/packages/as_nested_set)
 
@@ -10,15 +10,12 @@
 
 Add as_nested_set to your list of dependencies in `mix.exs`:
 
-      # use the stable version
+```elixir
+      # use the branch ecto-2.x
       def deps do
-        [{:as_nested_set, "~> 3.1"}]
+        [{:as_nested_set, github: "https://github.com/secretworry/as_nested_set.git", branch: "ecto-2.x"}]
       end
-
-      # use the latest version
-      def deps do
-        [{:as_nested_set, github: "https://github.com/secretworry/as_nested_set.git"}]
-      end
+```
 
 ## Usage
 
@@ -191,10 +188,6 @@ Be default, after using `AsNestedSet.move(node, target, :child)`, you move the `
 To achieve the goal, you should:
   1. Query the n-th child or (n-1)th child of the target by `AsNestedSet.children(target)`,
   2. Use `move(node, n_th_child, :left)` and `move(node, n_1_th_child, :right)` respectively.
-
-## Ecto 3.0
-
-Ecto is upgrading to 3.x. If you are using Ecto 3.x, please use branch `ecto-3.0` (Thanks for [@nicholasjhenry](https://github.com/nicholasjhenry))
 
 # Contributors
 
