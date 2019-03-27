@@ -14,8 +14,8 @@ defmodule AsNestedSet.Taxon do
     timestamps()
   end
 
-  @required_fields ~w(name taxonomy_id lft rgt)
-  @optional_fields ~w(parent_id)
+  @required_fields ~w(name taxonomy_id lft rgt)a
+  @optional_fields ~w(parent_id)a
 
 
   @doc """

@@ -26,7 +26,7 @@ defmodule AsNestedSet.Scoped do
 
   @spec scoped_query(Ecto.Query.t, Map.t) :: Ecto.Query.t
   def scoped_query(query, scope) do
-    {_, module} = query.from
+    %Ecto.Query.FromExpr{source: {_, module}} = query.from
     do_scoped_query(query, scope, module.__as_nested_set_scope__())
   end
 
