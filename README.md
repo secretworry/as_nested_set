@@ -19,7 +19,7 @@ Add as_nested_set to your list of dependencies in `mix.exs`:
 
 ## Usage
 
-To make use of `as_nested_set` your model has to have at least 4 fields: `id`, `lft`, `rgt` and `parent_id`. The name of those fields are configurable.
+To make use of `as_nested_set`, 4 fields( `id`, `lft`, `rgt` and `parent_id`) are required for your model. The name of those fields are configurable.
 
 ```elixir
 defmodule AsNestedSet.TestRepo.Migrations.MigrateAll do
@@ -51,7 +51,7 @@ end
 
 ## Options
 
-You can config the name of required field through attributes:
+You can config the name of required fields through attributes:
 
 ```elixir
 defmodule AsNestedSet.Taxon do
@@ -63,12 +63,12 @@ defmodule AsNestedSet.Taxon do
 end
 ```
 
-  * `@right_column`: column name for right boundary (default to `lft`, since left is a reserved keyword for Mysql)
-  * `@left_column`: column name for left boundary (default to `rgt`, reserved too)
-  * `@node_id_column`:  specifies the name for the node id column (default to `id`, i.e. the id of the model, change this if you want to have a different id, or you id field is different)
-  * `@parent_id_column`: specifies the name for the parent id column (default to `parent_id`)
+  * `@right_column`: column name for the right boundary (defaults to `lft`, since left is a reserved keyword for Mysql)
+  * `@left_column`: column name for the left boundary (defaults to `rgt`, reserved too)
+  * `@node_id_column`:  specifies the name for the node id column (defaults to `id`, i.e. the id of the model, change this if you want to have a different id, or you id field is different)
+  * `@parent_id_column`: specifies the name for the parent id column (defaults to `parent_id`)
 
-You can also pass following to modify its behavior:
+You can also pass following arguments to modify its behavior:
 
 ```elixir
 defmodule AsNestedSet.Taxon do
@@ -77,13 +77,13 @@ defmodule AsNestedSet.Taxon do
 end
 ```
 
-  * `scope`: (optional) a list of column names which restrict what is to be considered within the same tree(same scope). When ignored, all the nodes will be considered under the same tree.
+  * `scope`: (optional) a list of column names which restrict what are to be considered within the same tree(same scope). When ignored, all the nodes will be considered under the same tree.
 
 ## Model Operations
 
 Once you have set up you model, you can then
 
-Add a new node
+Add new nodes
 
 ```elixir
 target = Repo.find!(Taxon, 1)
@@ -160,7 +160,7 @@ AsNestedSet.traverse(target, context, fn node, context -> {node, context}, end, 
 
 *We recommend users to use a transaction to wrap all the operations in the production environment*
 
-We introduced the `@type executable`( a delayed execution ) as return value of each API, so using transaction or not and how granular the transaction should be are all up to users.
+We introduced the `@type executable`( a delayed execution ) as the return value of each API, so using transaction or not and how granular the transaction should be are all up to users.
 
 In general, almost all modifications of a nested set can be done in one SQL, but we can't express some of them using ecto's DSL( ecto doesn't support `case-when` in update query ), so users having concurrent modifications *must* wrap `AsNestedSet.execute(call, repo)` in a Transaction, for example
 
@@ -179,7 +179,7 @@ Repo.transaction fn ->
 end
 ```
 
-But if you want to ensure consistency across multiple `execute`s , to avoid the racing condition, you have to isolate them by wrap them in different transaction.
+But if you want to ensure consistency across multiple `execute`s , to avoid the racing condition, you have to isolate them by wrap them in different transactions.
 
 ## How to move a node to be the n-th child of a target
 
