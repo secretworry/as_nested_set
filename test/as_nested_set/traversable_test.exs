@@ -78,4 +78,36 @@ defmodule AsNestedSet.TraversableTest do
 
     assert ["n01", "n010", "n010", "n011", "n011", "n01"] == (acc |> Enum.reverse)
   end
+
+  test "traverse should return node and context" do
+    {root, _} = create_tree(1)
+    assert_raise ArgumentError, ~r/Expect :pre to return {AsNestedSet.t, context} but got/, fn->
+      traverse(root, [], fn node, acc ->
+        node
+      end, fn node, acc ->
+        {node, []}
+      end ) |> execute
+    end
+    assert_raise ArgumentError, ~r/Expect :post to return {AsNestedSet.t, context} but got/, fn->
+      traverse(root, [], fn node, acc ->
+        {node, []}
+      end, fn node, acc ->
+        node
+      end ) |> execute
+    end
+  end
+
+  test "traverse with 3 arguments post_fun should get children as the second argument" do
+    {root, _} = create_tree(1)
+    {_, acc} = traverse(root, [], fn node, acc -> {node, acc} end, fn node, children, acc ->
+      {node, [{node.name, children |> Enum.map(fn x -> x.name end)} | acc] }
+    end) |> execute
+    assert acc == [
+      {"n0", ["n00", "n01"]},
+      {"n01", ["n010", "n011"]},
+      {"n011", []},
+      {"n010", []},
+      {"n00", []}
+    ]
+  end
 end
