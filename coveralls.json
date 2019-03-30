@@ -1,5 +1,6 @@
 {
   "skip_files": [
-    "test"
+    "test",
+    "lib/as_nested_set.ex"
   ]
 }
