@@ -204,6 +204,7 @@ We will not support 2.x in our public releases, but if you are using Ecto 2.x, y
 * [@SagarKarwande](https://github.com/SagarKarwande)
 * [@oyeb](https://github.com/oyeb)
 * [@nicholasjhenry](https://github.com/nicholasjhenry)
+* [@montebrown](https://github.com/montebrown)
 
 # Special thanks
 
