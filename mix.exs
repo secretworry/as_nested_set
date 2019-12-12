@@ -4,7 +4,7 @@ defmodule AsNestedSet.Mixfile do
   def project do
     [
       app: :as_nested_set,
-      version: "3.2.1",
+      version: "3.3.0",
       elixir: "~> 1.2",
       elixirc_paths: elixirc_paths(Mix.env()),
       description: description(),
@@ -49,12 +49,12 @@ defmodule AsNestedSet.Mixfile do
 
   defp deps do
     [
-      {:ecto, "~> 3.0"},
-      {:ecto_sql, "~> 3.0"},
+      {:ecto, "~> 3.3"},
+      {:ecto_sql, "~> 3.3"},
       {:ex_doc, ">= 0.18.3", only: :dev},
-      {:postgrex, "~> 0.14.1", only: :test},
+      {:postgrex, "~> 0.15.0", only: :test},
       {:ex_machina, "~> 2.2", only: [:test]},
-      {:excoveralls, "~> 0.10", only: [:test]}
+      {:excoveralls, "~> 0.12", only: [:test]}
     ]
   end
 

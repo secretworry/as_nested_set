@@ -1,3 +1,7 @@
+# V3.3.0
+
+* [chore] Upgraded Ecto to 3.3
+
 # V3.2.1
 
 * [chore] Relaxed the specificity of the Ecto
