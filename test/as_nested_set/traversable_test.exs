@@ -82,16 +82,16 @@ defmodule AsNestedSet.TraversableTest do
   test "traverse should return node and context" do
     {root, _} = create_tree(1)
     assert_raise ArgumentError, ~r/Expect :pre to return {AsNestedSet.t, context} but got/, fn->
-      traverse(root, [], fn node, acc ->
+      traverse(root, [], fn node, _acc ->
         node
-      end, fn node, acc ->
+      end, fn node, _acc ->
         {node, []}
       end ) |> execute
     end
     assert_raise ArgumentError, ~r/Expect :post to return {AsNestedSet.t, context} but got/, fn->
-      traverse(root, [], fn node, acc ->
+      traverse(root, [], fn node, _acc ->
         {node, []}
-      end, fn node, acc ->
+      end, fn node, _acc ->
         node
       end ) |> execute
     end
