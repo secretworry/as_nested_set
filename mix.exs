@@ -2,18 +2,25 @@ defmodule AsNestedSet.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :as_nested_set,
-     version: "3.2.0",
-     elixir: "~> 1.2",
-     elixirc_paths: elixirc_paths(Mix.env),
-     description: description(),
-     package: package(),
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     deps: deps(),
-     test_coverage: [tool: ExCoveralls],
-     preferred_cli_env: [coveralls: :test, "coveralls.detail": :test, "coveralls.post": :test, "coveralls.html": :test, "coveralls.travis": :test]
-     ]
+    [
+      app: :as_nested_set,
+      version: "3.2.1",
+      elixir: "~> 1.2",
+      elixirc_paths: elixirc_paths(Mix.env()),
+      description: description(),
+      package: package(),
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
+      deps: deps(),
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test,
+        "coveralls.travis": :test
+      ]
+    ]
   end
 
   defp description do
@@ -33,7 +40,7 @@ defmodule AsNestedSet.Mixfile do
   end
 
   def application do
-    [applications: app_list(Mix.env)]
+    [applications: app_list(Mix.env())]
   end
 
   def app_list(:test), do: app_list() ++ [:ecto, :postgrex, :ex_machina]
