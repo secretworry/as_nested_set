@@ -117,7 +117,7 @@ Remove a specified node and all its descendants
 
 ```elixir
 target = Repo.find!(Taxon, 1)
-AsNestedSet.remove(target) |> AsNestedSet.execute(TestRepo)
+AsNestedSet.delete(target) |> AsNestedSet.execute(TestRepo)
 ```
 
 Query different nodes
