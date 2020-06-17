@@ -10,3 +10,6 @@ erl_crash.dump
 
 # Auto-generated files
 /doc
+
+# asdf config file
+/.tool-versions
