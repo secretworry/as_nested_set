@@ -1,3 +1,7 @@
+# V3.4.0
+
+* [chore] Upgraded Ecto to 3.4
+
 # V3.3.0
 
 * [chore] Upgraded Ecto to 3.3
