@@ -37,6 +37,10 @@ defmodule AsNestedSet.ModifiableTest do
     AsNestedSet.execute(executable, Repo)
   end
 
+  test "create/2 should create nodes with nil scope field without error" do
+    assert %AsNestedSet.Taxon{} = create(%Taxon{taxonomy_id: nil}, :root) |> execute
+  end
+
   test "create/3 should return {:error, :not_the_same_scope} for creating node from another scope" do
     node = insert(:taxon, lft: 0, rgt: 1, taxonomy_id: 0)
     assert create(%Taxon{taxonomy_id: 1}, node , :child) |> execute == {:error, :not_the_same_scope}

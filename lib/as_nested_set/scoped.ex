@@ -52,7 +52,12 @@ defmodule AsNestedSet.Scoped do
 
   defp do_scoped_query(query, scope, scope_fields) do
     Enum.reduce(scope_fields, query, fn(scope_field, acc) ->
-      acc |> where([p], field(p, ^scope_field) == ^Map.fetch!(scope, scope_field))
+      case Map.fetch!(scope, scope_field) do
+        nil ->
+          acc |> where([p], is_nil(field(p, ^scope_field)))
+        v ->
+          acc |> where([p], field(p, ^scope_field) == ^v)
+      end
     end)
   end
 
