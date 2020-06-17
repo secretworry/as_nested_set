@@ -13,7 +13,7 @@ Add as_nested_set to your list of dependencies in `mix.exs`:
 ```elixir
   # use the stable version
   def deps do
-    [{:as_nested_set, "~> 3.2"}]
+    [{:as_nested_set, "~> 3.3"}]
   end
 
   # use the latest version
@@ -117,7 +117,7 @@ Remove a specified node and all its descendants
 
 ```elixir
 target = Repo.find!(Taxon, 1)
-AsNestedSet.remove(target) |> AsNestedSet.execute(TestRepo)
+AsNestedSet.delete(target) |> AsNestedSet.execute(TestRepo)
 ```
 
 Query different nodes
