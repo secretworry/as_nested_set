@@ -13,7 +13,7 @@ Add as_nested_set to your list of dependencies in `mix.exs`:
 ```elixir
   # use the stable version
   def deps do
-    [{:as_nested_set, "~> 3.3"}]
+    [{:as_nested_set, "~> 3.4"}]
   end
 
   # use the latest version
