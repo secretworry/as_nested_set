@@ -6,6 +6,7 @@ defmodule AsNestedSet.Modifiable do
   import AsNestedSet.Helper
 
   @spec create(AsNestedSet.t, AsNestedSet.t, position) :: AsNestedSet.executable
+  @spec create(AsNestedSet.t, nil, :root) :: AsNestedSet.executable
   def create(new_model, target \\ nil, position) when is_atom(position) do
     fn repo ->
       case validate_create(new_model, target, position) do
@@ -200,7 +201,7 @@ defmodule AsNestedSet.Modifiable do
     |> repo.one
   end
 
-  @spec delete(AsNestedSet.t) :: AsNestedSet.exectuable
+  @spec delete(AsNestedSet.t) :: AsNestedSet.executable
   def delete(%{__struct__: struct} = model) do
     fn repo ->
       left = get_field(model, :left)
@@ -233,7 +234,7 @@ defmodule AsNestedSet.Modifiable do
   end
 
   @spec move(AsNestedSet.t, AsNestedSet.t, position) :: AsNestedSet.executable
-  @spec move(AsNestedSet.t, :root) :: AsNestedSet.executable
+  @spec move(AsNestedSet.t, nil, :root) :: AsNestedSet.executable
   def move(%{__struct__: _} = model, target \\ nil, position) when is_atom(position) do
     fn repo ->
       model = do_reload(repo, model)
