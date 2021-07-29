@@ -24,7 +24,7 @@ defmodule AsNestedSet.Scoped do
     && do_same_scope?(source, target)
   end
 
-  @spec scoped_query(Ecto.Query.t, Map.t) :: Ecto.Query.t
+  @spec scoped_query(Ecto.Query.t, map) :: Ecto.Query.t
   def scoped_query(query, scope) do
     %Ecto.Query.FromExpr{source: {_, module}} = query.from
     do_scoped_query(query, scope, module.__as_nested_set_scope__())
@@ -38,7 +38,7 @@ defmodule AsNestedSet.Scoped do
     end)
   end
 
-  @spec scope(any) :: Map.t
+  @spec scope(any) :: map
   def scope(%{__struct__: struct} = target) do
     scope = struct.__as_nested_set_scope__
     Enum.reduce(scope, %{}, fn scope, acc ->

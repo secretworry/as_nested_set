@@ -3,7 +3,7 @@ defmodule AsNestedSet.Traversable do
   @type pre_fun :: (AsNestedSet.t, any -> {AsNestedSet.t, any})
   @type post_fun :: (AsNestedSet.t, [AsNestedSet.t], any -> {AsNestedSet.t, any}) | (AsNestedSet.t, any -> {AsNestedSet.t, any})
 
-  @spec traverse(AsNestedSet.Scoped, any, pre_fun, post_fun) :: (Ecto.Repo.t -> {AsNestedSet.t, any})
+  @spec traverse(AsNestedSet.t, any, pre_fun, post_fun) :: (Ecto.Repo.t -> {AsNestedSet.t, any})
   def traverse(%{__struct__: _} = node, context, pre, post) do
     fn repo ->
       node = do_reload(node, repo)
