@@ -1,14 +1,18 @@
 defmodule AsNestedSet.Queriable do
-
   import Ecto.Query
   import AsNestedSet.Helper
 
   def self_and_siblings(%{__struct__: struct} = target) do
+    self_and_siblings(struct, target)
+  end
+
+  def self_and_siblings(query, %{__struct__: _} = target) do
     fn repo ->
       parent_id_column = get_column_name(target, :parent_id)
       left_column = get_column_name(target, :left)
       parent_id = get_field(target, :parent_id)
-      from(q in struct,
+
+      from(q in query,
         where: field(q, ^parent_id_column) == ^parent_id,
         order_by: ^[left_column]
       )
@@ -23,6 +27,7 @@ defmodule AsNestedSet.Queriable do
       right = get_field(target, :right)
       left_column = get_column_name(target, :left)
       right_column = get_column_name(target, :right)
+
       from(q in struct,
         where: field(q, ^left_column) < ^left and field(q, ^right_column) > ^right,
         order_by: ^[left_column]
@@ -33,12 +38,17 @@ defmodule AsNestedSet.Queriable do
   end
 
   def self_and_descendants(%{__struct__: struct} = target) do
+    self_and_descendants(struct, target)
+  end
+
+  def self_and_descendants(query, %{__struct__: _} = target) do
     fn repo ->
       left = get_field(target, :left)
       right = get_field(target, :right)
       left_column = get_column_name(target, :left)
       right_column = get_column_name(target, :right)
-      from(q in struct,
+
+      from(q in query,
         where: field(q, ^left_column) >= ^left and field(q, ^right_column) <= ^right,
         order_by: ^[left_column]
       )
@@ -50,6 +60,7 @@ defmodule AsNestedSet.Queriable do
   def root(module, scope) when is_atom(module) do
     fn repo ->
       parent_id_column = get_column_name(module, :parent_id)
+
       from(q in module,
         where: is_nil(field(q, ^parent_id_column)),
         limit: 1
@@ -63,6 +74,7 @@ defmodule AsNestedSet.Queriable do
     fn repo ->
       parent_id_column = get_column_name(module, :parent_id)
       left_column = get_column_name(module, :left)
+
       from(q in module,
         where: is_nil(field(q, ^parent_id_column)),
         order_by: ^[left_column]
@@ -73,12 +85,17 @@ defmodule AsNestedSet.Queriable do
   end
 
   def descendants(%{__struct__: struct} = target) do
+    descendants(struct, target)
+  end
+
+  def descendants(query, %{__struct__: _} = target) do
     fn repo ->
       left = get_field(target, :left)
       right = get_field(target, :right)
       left_column = get_column_name(target, :left)
       right_column = get_column_name(target, :right)
-      from(q in struct,
+
+      from(q in query,
         where: field(q, ^left_column) > ^left and field(q, ^right_column) < ^right,
         order_by: ^[left_column]
       )
@@ -101,11 +118,16 @@ defmodule AsNestedSet.Queriable do
   end
 
   def children(%{__struct__: struct} = target) do
+    children(struct, target)
+  end
+
+  def children(query, %{__struct__: _} = target) do
     fn repo ->
       parent_id_column = get_column_name(target, :parent_id)
       left_column = get_column_name(target, :left)
       node_id = get_field(target, :node_id)
-      from(q in struct,
+
+      from(q in query,
         where: field(q, ^parent_id_column) == ^node_id,
         order_by: ^[left_column]
       )
@@ -119,21 +141,22 @@ defmodule AsNestedSet.Queriable do
       parent_id_column = get_column_name(module, :parent_id)
       left_column = get_column_name(module, :left)
 
-      children = if parent_id do
-        from(q in module,
-          where: field(q, ^parent_id_column) == ^parent_id,
-          order_by: ^[left_column]
-        )
-      else
-        from(q in module,
-          where: is_nil(field(q, ^parent_id_column)),
-          order_by: ^[left_column]
-        )
-      end
-      |> AsNestedSet.Scoped.scoped_query(scope)
-      |> repo.all
+      children =
+        if parent_id do
+          from(q in module,
+            where: field(q, ^parent_id_column) == ^parent_id,
+            order_by: ^[left_column]
+          )
+        else
+          from(q in module,
+            where: is_nil(field(q, ^parent_id_column)),
+            order_by: ^[left_column]
+          )
+        end
+        |> AsNestedSet.Scoped.scoped_query(scope)
+        |> repo.all
 
-      Enum.map(children, fn(child) ->
+      Enum.map(children, fn child ->
         node_id = get_field(child, :node_id)
         {child, dump(module, scope, node_id).(repo)}
       end)
@@ -143,7 +166,7 @@ defmodule AsNestedSet.Queriable do
   def dump_one(module, scope) do
     fn repo ->
       case dump(module, scope).(repo) do
-        [dump|_] -> dump
+        [dump | _] -> dump
         error -> error
       end
     end
@@ -152,6 +175,7 @@ defmodule AsNestedSet.Queriable do
   def right_most(module, scope) when is_atom(module) do
     fn repo ->
       right_column = get_column_name(module, :right)
+
       from(q in module,
         select: max(field(q, ^right_column))
       )
@@ -161,6 +185,7 @@ defmodule AsNestedSet.Queriable do
   end
 
   def right_most(nil), do: fn _ -> -1 end
+
   def right_most(%{__struct__: struct} = target) do
     fn repo ->
       right_most(struct, target).(repo)

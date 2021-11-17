@@ -130,20 +130,31 @@ AsNestedSet.roots(Taxon, %{taxonomy_id: 1}) |> AsNestedSet.execute(TestRepo)
 # find all children of target
 AsNestedSet.children(target) |> AsNestedSet.execute(TestRepo)
 
+# find children of a target filtered by an Ecto query
+import Ecto.Query, only: [from: 2]
+...
+from(r in Records, where: r.public == true) |> AsNestedSet.children(target) |> AsNestedSet.execute(TestRepo)
+
 # find all the leaves for given scope
 AsNestedSet.leaves(Taxon, %{taxonomy_id: 1}) |> AsNestedSet.execute(TestRepo)
 
 # find all descendants
 AsNestedSet.descendants(target) |> AsNestedSet.execute(TestRepo)
+
+# filtered descendants
+from(r in Records, where: r.public == true) |> AsNestedSet.descendants(target) |> AsNestedSet.execute(TestRepo)
+
 # include self
 AsNestedSet.self_and_descendants(target) |> AsNestedSet.execute(TestRepo)
 
 # find all ancestors
 AsNestedSet.ancestors(target) |> AsNestedSet.execute(TestRepo)
 
-#find all siblings (self included)
+# find all siblings (self included)
 AsNestedSet.self_and_siblings(target) |> AsNestedSet.execute(TestRepo)
 
+# find siblings filtered by a query (self included)
+from(r in Records, where: r.public == true) |> AsNestedSet.self_and_siblings(target) |> AsNestedSet.execute(TestRepo)
 ```
 
 Traverse the tree
