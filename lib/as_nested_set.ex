@@ -39,13 +39,17 @@ defmodule AsNestedSet do
   defdelegate move(model, position), to: AsNestedSet.Modifiable
 
   defdelegate self_and_siblings(target), to: AsNestedSet.Queriable
+  defdelegate self_and_siblings(query, target), to: AsNestedSet.Queriable
   defdelegate ancestors(target), to: AsNestedSet.Queriable
   defdelegate self_and_descendants(target), to: AsNestedSet.Queriable
+  defdelegate self_and_descendants(query, target), to: AsNestedSet.Queriable
   defdelegate root(module, scope), to: AsNestedSet.Queriable
   defdelegate roots(module, scope), to: AsNestedSet.Queriable
   defdelegate descendants(target), to: AsNestedSet.Queriable
+  defdelegate descendants(query, target), to: AsNestedSet.Queriable
   defdelegate leaves(module, scope), to: AsNestedSet.Queriable
   defdelegate children(target), to: AsNestedSet.Queriable
+  defdelegate children(query, target), to: AsNestedSet.Queriable
   defdelegate dump(module, scope), to: AsNestedSet.Queriable
   defdelegate dump(module, scope, parent_id), to: AsNestedSet.Queriable
   defdelegate dump_one(module, scope), to: AsNestedSet.Queriable
